@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android" >
+
+	<style name="scoreboard">
+		<item name="android:textSize">12sp</item>
+		<item name="android:typeface">monospace</item>
+		<item name="android:gravity">center</item>
+		<item name="android:textColor">#ff0014</item>
+	</style>
+	
+	<style name="scoreboard_label">
+		<item name="android:textSize">10sp</item>
+		<item name="android:gravity">center</item>
+		<item name="android:typeface">serif</item>
+		<item name="android:textStyle">bold</item>
+	</style>
+	
+	<style name="scoreboard_land">
+		<item name="android:textSize">14sp</item>
+		<item name="android:typeface">monospace</item>
+		<item name="android:gravity">center</item>
+		<item name="android:textColor">#ff0014</item>
+	</style>
+	
+	<style name="scoreboard_label_land">
+		<item name="android:textSize">12sp</item>
+		<item name="android:gravity">center</item>
+		<item name="android:typeface">serif</item>
+		<item name="android:textStyle">bold</item>
+	</style>
+	
+	<style name="status">
+		<item name="android:textSize">8sp</item>
+		<item name="android:width">60dip</item>
+		<item name="android:height">54dip</item>
+	</style>	
+		
+	<style name="button">
+		<item name="android:textSize">8sp</item>
+		<item name="android:width">54dip</item>
+		<item name="android:height">54dip</item>
+	</style>	
+
+</resources>

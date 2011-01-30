@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" 
+	android:layout_height="fill_parent"
+	android:background="@drawable/splash_background"
+	android:orientation="vertical"
+	android:layout_gravity="center">
+
+	<LinearLayout 
+		android:layout_width="fill_parent" 
+		android:layout_height="fill_parent"
+		android:layout_weight="40"
+		android:orientation="horizontal"
+		android:layoutAnimation="@anim/layout_bounce_left">
+		<ImageView 
+				android:layout_width="fill_parent" 
+				android:layout_height="fill_parent" 	
+				android:src="@drawable/logo"/>
+			
+	</LinearLayout>
+	
+	<LinearLayout
+		android:layout_width="fill_parent" 
+		android:layout_height="fill_parent"
+		android:layout_weight="60"
+		android:orientation="vertical"
+		android:layoutAnimation="@anim/layout_bounce_right">
+		<Button
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_gravity="center"
+				android:text="Play"
+				android:onClick="onNewGame"/>
+		<Button
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_gravity="center"
+				android:text="Settings"
+				android:onClick="onSettings"/>
+				
+		<Button
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_gravity="center"
+				android:text="About"
+				android:onClick="onAbout"/>
+				
+		<Button
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_gravity="center"
+				android:text="Exit"
+				android:onClick="onExit"/>
+		
+	</LinearLayout>	
+
+</LinearLayout>		
+
+
