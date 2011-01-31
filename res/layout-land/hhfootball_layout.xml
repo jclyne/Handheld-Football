@@ -4,7 +4,8 @@
 	android:id="@+id/LinearLayout01"
 	android:layout_width="match_parent" 
 	android:layout_height="match_parent"
-	android:orientation="vertical">
+	android:orientation="vertical"
+	android:background="@drawable/field_background">
 	
 	<TableLayout
 		android:id="@+id/scoreboard"
@@ -70,16 +71,16 @@
 		
     <TextView
     	android:id="@+id/status_view"
-    	android:layout_width="wrap_content"
+    	android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
-		android:gravity="center_horizontal"
+		android:gravity="center"
 		android:text="GAME OVER"/>
 		
 	<TextView
     	android:id="@+id/info_view"
-    	android:layout_width="wrap_content"
+    	android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
-		android:gravity="center_horizontal"
+		android:gravity="center"
 		android:text=""/>
     
     <RelativeLayout
@@ -88,85 +89,7 @@
 		android:layout_marginBottom="10dip"
 		android:layout_marginLeft="10dip"
 		android:layout_marginRight="10dip"
-		android:background="@drawable/controller_background">
-		
-		
-		<Button
-			android:id="@+id/anchor"
-			android:layout_width="60dip"
-			android:layout_height="27dip"
-			android:visibility="invisible"
-			android:text="anchor"
-			android:layout_alignParentBottom="true"
-			android:layout_alignParentRight="true"/>
-			
-		<Button
-			android:id="@+id/right_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			style="@style/button"
-			android:text="RIGHT"
-			android:onClick="onRight"
-			android:layout_above="@+id/anchor"
-			android:layout_alignRight="@+id/anchor"
-			android:background="@drawable/right_button"/>
-			
-		<Button
-			android:id="@+id/down_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			style="@style/button"
-			android:text="DOWN"
-			android:onClick="onDown"
-			android:layout_alignBottom="@+id/anchor"
-			android:layout_toLeftOf="@+id/anchor"
-			android:background="@drawable/down_button"/>
-				
-		<Button
-			android:id="@+id/up_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			style="@style/button"
-			android:text="UP"
-			android:onClick="onUp"
-			android:layout_above="@+id/down_button"
-			android:layout_toLeftOf="@+id/right_button"
-			android:background="@drawable/up_button"/>
-			
-		<Button
-			android:id="@+id/left_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			style="@style/button"
-			android:text="LEFT"
-			android:onClick="onLeft"
-			android:layout_alignTop="@+id/right_button"
-			android:layout_toLeftOf="@+id/up_button"
-			android:background="@drawable/left_button"/>
-			
-		<Button
-			android:id="@+id/pass_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_marginRight="30dip"
-			style="@style/button"
-			android:text="PASS"
-			android:onClick="onPass"
-			android:layout_toLeftOf="@+id/left_button"
-			android:layout_alignTop="@+id/left_button"
-			android:background="@drawable/controller_button"/>
-			
-		<Button
-			android:id="@+id/kick_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			style="@style/button"
-			android:text="KICK"
-			android:onClick="onKick"
-			android:layout_alignParentBottom="true"
-			android:layout_alignParentLeft="true"
-			android:background="@drawable/controller_button"/>
-			
+		android:gravity="center_vertical">
 			
 		<Button
 			android:id="@+id/huddle_button"
@@ -175,9 +98,68 @@
 			style="@style/button"
 			android:text="HUDDLE"
 			android:onClick="onHuddle"
-			android:layout_above="@+id/kick_button"
-			android:layout_alignParentLeft="true"
 			android:background="@drawable/controller_button"/>
+				
+		<Button
+			android:id="@+id/kick_button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			style="@style/button"
+			android:text="KICK"
+			android:onClick="onKick"
+			android:background="@drawable/controller_button"
+			android:layout_below="@+id/huddle_button"/>
+			
+		<Button
+			android:id="@+id/pass_button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="27dip"
+			style="@style/button"
+			android:text="PASS"
+			android:onClick="onPass"
+			android:background="@drawable/controller_button"
+			android:layout_toRightOf="@+id/huddle_button"/>
+			
+		<Button
+			android:id="@+id/right_button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			style="@style/button"
+			android:onClick="onRight"
+			android:background="@drawable/right_button"
+			android:layout_alignParentRight="true"
+			android:layout_alignTop="@+id/pass_button"/>
+			
+		<Button
+			android:id="@+id/up_button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			style="@style/button"
+			android:onClick="onUp"
+			android:background="@drawable/up_button"
+			android:layout_toLeftOf="@+id/right_button"
+			android:layout_alignTop="@+id/huddle_button"/>
+			
+		<Button
+			android:id="@+id/down_button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			style="@style/button"
+			android:onClick="onDown"
+			android:background="@drawable/down_button"
+			android:layout_toLeftOf="@+id/right_button"
+			android:layout_alignTop="@+id/kick_button"/>
+
+		<Button
+			android:id="@+id/left_button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			style="@style/button"
+			android:onClick="onLeft"
+			android:background="@drawable/left_button"
+			android:layout_toLeftOf="@+id/down_button"
+			android:layout_alignTop="@+id/right_button"/>
 		
 	</RelativeLayout>>	
 	

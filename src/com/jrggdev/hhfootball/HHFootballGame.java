@@ -4,6 +4,7 @@ import java.util.Random;
 
 import android.app.Activity;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -270,7 +271,7 @@ public class HHFootballGame extends Activity
 		mPeriodView = (TextView)findViewById(R.id.scoreboard_period);
 		mHomeScoreView = (TextView)findViewById(R.id.scoreboard_home);
 		mVisitorScoreView = (TextView)findViewById(R.id.scoreboard_visitor);
-		
+				
 		mPlayClock = new PlayClock(mPlayClockView);
 	}
 	

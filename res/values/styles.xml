@@ -36,9 +36,10 @@
 	</style>	
 		
 	<style name="button">
-		<item name="android:textSize">8sp</item>
+		<item name="android:textSize">10sp</item>
+		<item name="android:textStyle">bold</item>
 		<item name="android:width">54dip</item>
 		<item name="android:height">54dip</item>
-	</style>	
+</style>	
 
 </resources>
