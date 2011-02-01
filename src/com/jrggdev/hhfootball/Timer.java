@@ -40,9 +40,7 @@ public class Timer extends Handler
 
 		}
 	}
-	
-	
-	
+
 	public void start(int intervalMillis)
 	{
 		mIntervalMillis=intervalMillis;

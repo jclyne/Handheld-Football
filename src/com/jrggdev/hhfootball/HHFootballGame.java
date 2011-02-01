@@ -9,6 +9,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
 /**
@@ -26,8 +28,9 @@ public class HHFootballGame extends Activity
 	
 	/** Child view definitions */
 	private HHFootballFieldView mFieldView;
-	private TextView mStatusView;
-	private TextView mInfoView;
+	private TextView mDriveView;
+	private TextView mFieldPosView;
+	private TextViewAnimator mInfoView;
 	private TextView mPlayClockView;
 	private TextView mPeriodView;
 	private TextView mHomeScoreView;
@@ -181,6 +184,8 @@ public class HHFootballGame extends Activity
 		} 
 	});
 	
+	private static final int mInfoDuration=2000;
+	
 	/**
 	 * Game settings
 	 */
@@ -271,13 +276,18 @@ public class HHFootballGame extends Activity
 		setContentView(R.layout.hhfootball_layout);
 		
 		mFieldView = (HHFootballFieldView)findViewById(R.id.hhfootballview);		
-		mStatusView = (TextView)findViewById(R.id.status_view);
-		mInfoView = (TextView)findViewById(R.id.info_view);
+		mDriveView = (TextView)findViewById(R.id.drive_view);
+		mFieldPosView = (TextView)findViewById(R.id.fieldpos_view);
+		
 		mPlayClockView = (TextView)findViewById(R.id.scoreboard_clock);
 		mPeriodView = (TextView)findViewById(R.id.scoreboard_period);
 		mHomeScoreView = (TextView)findViewById(R.id.scoreboard_home);
 		mVisitorScoreView = (TextView)findViewById(R.id.scoreboard_visitor);
 				
+		mInfoView = new TextViewAnimator((TextView)findViewById(R.id.info_view),
+											AnimationUtils.loadAnimation(this, R.anim.scroll_in),
+											AnimationUtils.loadAnimation(this, R.anim.scroll_out));
+		
 		mPlayClock = new PlayClock(mPlayClockView);
 	}
 	
@@ -444,7 +454,7 @@ public class HHFootballGame extends Activity
 		arrangePreSnapFormation(mOffense);
 		arrangePreSnapFormation(mDefense);
 		mState=State.PRE_SNAP;
-		mInfoView.setText("");
+		mInfoView.clearText();
 		updateScoreBoard();
 		updateDriveStatus();
 	}
@@ -578,7 +588,7 @@ public class HHFootballGame extends Activity
 		if (checkFirstDown())
 		{
 			handleFirstDown();
-			mInfoView.setText("First Down");
+			mInfoView.setText("First Down",mInfoDuration);
 		}
 		else if (mSeriesDown < mDownsPerSeries)
 		{
@@ -589,7 +599,7 @@ public class HHFootballGame extends Activity
 		{
 			// Turnover on downs
 			mChangeOfPossesion=true;
-			mInfoView.setText("Turnover on Downs");
+			mInfoView.setText("Turnover on Downs",mInfoDuration);
 		}
 	}
 	
@@ -623,7 +633,7 @@ public class HHFootballGame extends Activity
 			mVisitorScore+=7;
 		}
 		
-		mInfoView.setText("Touchdown");
+		mInfoView.setText("Touchdown",mInfoDuration);
 		mKickOff=true;
 	}
 	
@@ -872,7 +882,6 @@ public class HHFootballGame extends Activity
 		quarterback.set(receiver.x,receiver.y);
 		receiver.set(-1,-1);
 		mState=State.PLAY_LIVE;	
-		mInfoView.setText("Complete");
 		
 		if (mOffense.orientation() == Team.ORIENTATION_LEFT)
 		{
@@ -896,7 +905,7 @@ public class HHFootballGame extends Activity
 		defender.setFlashing(true);
 		mChangeOfPossesion=true;
 		handlePlayDead();
-		mInfoView.setText("Interception");
+		mInfoView.setText("Interception",mInfoDuration);
 	} 
 	
 	private void handlePass()
@@ -1056,15 +1065,15 @@ public class HHFootballGame extends Activity
 		mVisitorScoreView.setText(String.format("%d",mVisitorScore));
 	}
 
-	private void updateDriveStatus()
+	private String driveStatusToString()
 	{
 		String status="";
 		switch (mSeriesDown)
 		{
-		case 1:status= "1st down"; break;
-		case 2:status= "2nd down"; break;
-		case 3:status= "3rd down"; break;
-		case 4: status= "4th down"; break;
+			case 1:status= "1st and"; break;
+			case 2:status= "2nd and"; break;
+			case 3:status= "3rd and"; break;
+			case 4: status= "4th and"; break;
 		}
 		
 		if (mOffense.orientation() == Team.ORIENTATION_RIGHT)
@@ -1075,19 +1084,23 @@ public class HHFootballGame extends Activity
 		{
 			status+= String.format(" %d",mFieldPos-mFirstDownPos);
 		}
-		
-		status+= " yds to go, Ball on";
+		return status;
+	}
+	
+	private String fieldPosToString()
+	{
+		String status= "";
 		if (mFieldPos>50)
 		{
 			if (mOffense.orientation() == Team.ORIENTATION_RIGHT)
 			{
-				status+= String.format(" opp");
+				status+= String.format(" Opp");
 			}
 			else
 			{
-				status+= String.format(" own");
+				status+= String.format(" Own");
 			}
-			status+= String.format(" %d yard line",50-(mFieldPos-50));
+			status+= String.format(" %d",50-(mFieldPos-50));
 		}
 		else
 		{
@@ -1095,18 +1108,25 @@ public class HHFootballGame extends Activity
 			{
 				if (mOffense.orientation() == Team.ORIENTATION_RIGHT)
 				{
-					status+= String.format(" own");
+					status+= String.format(" Own");
 				}
 				else
 				{
-					status+= String.format(" opp");
+					status+= String.format(" Opp");
 				}
 			}
-			status+= String.format(" %d yard line",mFieldPos);
+			status+= String.format(" %d",mFieldPos);
 		}
 		
-		mStatusView.setText(status);
+		return status;
 	}
+	
+	private void updateDriveStatus()
+	{
+		mDriveView.setText(driveStatusToString());
+		mFieldPosView.setText(fieldPosToString());
+	}
+
 
 	private void updateGame(boolean flash)
 	{
