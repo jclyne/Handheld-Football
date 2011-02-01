@@ -1,4 +1,4 @@
-package com.jrggdev.hhfootball;
+package com.jrggdev;
 
 import android.os.Handler;
 import android.os.Message;

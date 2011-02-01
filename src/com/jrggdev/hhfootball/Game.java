@@ -9,9 +9,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.TextView;
+
+import com.jrggdev.TextViewAnimator;
+import com.jrggdev.Timer;
 
 /**
  * HHFootball: a simple game that everyone can enjoy.
@@ -22,12 +24,12 @@ import android.widget.TextView;
  * you'll move faster. Running into yourself or the walls will end the game.
  * 
  */
-public class HHFootballGame extends Activity
+public class Game extends Activity
 {
 	private static String TAG = "HHFootball";
 	
 	/** Child view definitions */
-	private HHFootballFieldView mFieldView;
+	private FieldView mFieldView;
 	private TextView mDriveView;
 	private TextView mFieldPosView;
 	private TextViewAnimator mInfoView;
@@ -172,7 +174,7 @@ public class HHFootballGame extends Activity
 		private boolean mFlashToggle=false;
 		public boolean HandleTimer() { 
 			mFlashToggle=!mFlashToggle;
-			HHFootballGame.this.updateGame(mFlashToggle);
+			Game.this.updateGame(mFlashToggle);
 			return true;
 		} 
 	});
@@ -180,7 +182,7 @@ public class HHFootballGame extends Activity
 	private int mAiUpdateRate=250;
 	private Timer mAiUpdater = new Timer(mAiUpdateRate,new Timer.TimerHandler() {
 		public boolean HandleTimer() { 			
-			return HHFootballGame.this.OnUpdateGameAI(); 
+			return Game.this.OnUpdateGameAI(); 
 		} 
 	});
 	
@@ -275,7 +277,7 @@ public class HHFootballGame extends Activity
 
 		setContentView(R.layout.hhfootball_layout);
 		
-		mFieldView = (HHFootballFieldView)findViewById(R.id.hhfootballview);		
+		mFieldView = (FieldView)findViewById(R.id.hhfootballview);		
 		mDriveView = (TextView)findViewById(R.id.drive_view);
 		mFieldPosView = (TextView)findViewById(R.id.fieldpos_view);
 		
@@ -950,8 +952,8 @@ public class HHFootballGame extends Activity
 		switch (mState)
 		{
 			case PLAY_LIVE:
-				HHFootballGame.this.OnMoveDefense(); 
-				HHFootballGame.this.OnMoveReceiver(); 
+				Game.this.OnMoveDefense(); 
+				Game.this.OnMoveReceiver(); 
 				return (mState==State.PLAY_LIVE);
 			case PASS:
 				handlePass();

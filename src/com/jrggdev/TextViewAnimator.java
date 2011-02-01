@@ -1,4 +1,4 @@
-package com.jrggdev.hhfootball;
+package com.jrggdev;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -37,7 +37,7 @@ public class TextViewAnimator implements Animation.AnimationListener,Timer.Timer
 	}
 	Queue<TextDisplay> mTextQueue;
 	
-	TextViewAnimator(TextView textView,Animation inAnim,Animation outAnim)
+	public TextViewAnimator(TextView textView,Animation inAnim,Animation outAnim)
 	{
 		mTextView=textView;
 		mInAnim=inAnim;

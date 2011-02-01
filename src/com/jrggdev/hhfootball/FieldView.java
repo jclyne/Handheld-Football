@@ -12,16 +12,16 @@ import android.util.Log;
 import android.view.View;
 
 /**
- * HHFootballFieldView: a custom view that implements a hand held football
+ * FieldView: a custom view that implements a hand held football
  * field. It constructs a grid of field locations and stores bitmaps for all
  * possible entities, referred to as tiles at the locations. It can handle
  * collision detection as well.
  * 
  */
-public class HHFootballFieldView extends View
+public class FieldView extends View
 {
 	// Logging Tag
-	private static final String TAG = "HHFootballFieldView";
+	private static final String TAG = "FieldView";
 	
 	/**
 	 * These parameters handle the dimensions of the field
@@ -97,7 +97,7 @@ public class HHFootballFieldView extends View
 	 * @param attrs
 	 * @param defStyle
 	 */
-	public HHFootballFieldView(Context context, AttributeSet attrs, int defStyle)
+	public FieldView(Context context, AttributeSet attrs, int defStyle)
 	{
 		super(context, attrs, defStyle);
 		setFocusable(true);
@@ -108,7 +108,7 @@ public class HHFootballFieldView extends View
 	 * @param context
 	 * @param attrs
 	 */
-	public HHFootballFieldView(Context context, AttributeSet attrs)
+	public FieldView(Context context, AttributeSet attrs)
 	{
 		super(context, attrs);
 		setFocusable(true);
