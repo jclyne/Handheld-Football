@@ -11,8 +11,7 @@
 			</intent-filter>
 		</activity>
 
-		<activity android:name="HHFootballGame" 
-			android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+		<activity android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:name="Game">
 			<intent-filter>
 				<category android:name="android.intent.category.DEFAULT"/>
 				<action android:name="android.intent.action.MAIN"/>
