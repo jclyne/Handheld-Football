@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Random;
 
-import junit.framework.Assert;
+import android.os.Bundle;
 
 
 /**
@@ -38,6 +38,14 @@ abstract class Player
 	{
 		x = newX;
 		y = newY;
+		mTeam=team;
+	}
+	
+	public Player(Team team,Bundle bundle)
+	{
+		x = bundle.getInt("xpos");
+		y = bundle.getInt("ypos");
+		mFlashing=bundle.getBoolean("mFlashing");
 		mTeam=team;
 	}
 	
@@ -81,6 +89,16 @@ abstract class Player
 		x = newX;
 		y = newY;
 	}
+	
+	public Bundle serialize()
+	{
+		Bundle bundle = new Bundle();
+		bundle.putInt("xpos", x);
+		bundle.putInt("ypos", y);
+		bundle.putBoolean("mFlashing", mFlashing);
+		
+		return bundle;
+	}
 }
 
 abstract class OffensivePlayer extends Player
@@ -95,10 +113,22 @@ abstract class OffensivePlayer extends Player
 	{
 		super(team, newX, newY);
 	}
+	
 
 	public OffensivePlayer(Player copy)
 	{
 		super(copy);
+	}
+	
+	public OffensivePlayer(Team team, Bundle bundle)
+	{
+		super(team, bundle);
+	}
+	
+	public Bundle serialize()
+	{
+		Bundle bundle =  super.serialize();
+		return bundle;
 	}
 	
 }
@@ -121,9 +151,20 @@ class Quarterback extends OffensivePlayer
 		super(copy);
 	}
 	
+	public Quarterback(Team team, Bundle bundle)
+	{
+		super(team, bundle);
+	}
+	
 	public Position position() 
 	{ 
 		return Position.Quarterback; 
+	}
+	
+	public Bundle serialize()
+	{
+		Bundle bundle =  super.serialize();
+		return bundle;
 	}
 	
 }
@@ -145,9 +186,20 @@ class Receiver extends OffensivePlayer
 		super(copy);
 	}
 	
+	public Receiver(Team team, Bundle bundle)
+	{
+		super(team, bundle);
+	}
+	
 	public Position position()
 	{ 
 		return Position.Receiver; 
+	}
+	
+	public Bundle serialize()
+	{
+		Bundle bundle =  super.serialize();
+		return bundle;
 	}
 	
 }
@@ -169,9 +221,20 @@ class DefensivePlayer extends Player
 		super(copy);
 	}
 	
+	public DefensivePlayer(Team team, Bundle bundle)
+	{
+		super(team, bundle);
+	}
+	
 	public Position position() 
 	{ 
 		return Position.Defender; 
+	}
+	
+	public Bundle serialize()
+	{
+		Bundle bundle =  super.serialize();
+		return bundle;
 	}
 	
 }
@@ -226,6 +289,14 @@ abstract class Team implements Iterable<Player>
 		mPlayers=new Player[size];
 	}
 	
+	public Team(Bundle bundle)
+	{
+		mSize=bundle.getInt("mSize");
+		mSide=bundle.getInt("mSide");
+		mOrientation=bundle.getInt("mOrientation");
+		mPlayers=new Player[mSize];
+	}
+	
 	public PlayerIterator iterator() { return new PlayerIterator(mPlayers,mSize); }
 	public Player getPlayer(int idx) { assert(idx< mSize); return mPlayers [idx]; }
 	public Player getRandomPlayer()
@@ -258,21 +329,39 @@ abstract class Team implements Iterable<Player>
 	
 	public final int size() { return mSize; }
 	
+	public Bundle serialize()
+	{
+		Bundle bundle=new Bundle();
+		bundle.putInt("mSize", mSize);
+		bundle.putInt("mSide", mSide);
+		bundle.putInt("mOrientation", mOrientation);
+		for (int i=0;i<size();i++)
+			bundle.putBundle("player"+i, mPlayers[i].serialize());
+			
+		return bundle;
+	}
 	
 	protected abstract int[][] getPreSnapFormation();
 }
 
 class Offense extends Team
 {
-	private int QUARTERBACK=0;
-	private int RECEIVER=1;
+	private static final int QUARTERBACK=0;
+	private static final int RECEIVER=1;
 	
-	private static int[][] preSnapFormation= {{2,1},{-1,-1}}; 
+	private static final int[][] preSnapFormation= {{2,1},{-1,-1}}; 
 	public Offense(int side,int orientation)
 	{
 		super(2,side,orientation);
 		mPlayers[QUARTERBACK]=new Quarterback(this);
 		mPlayers[RECEIVER]=new Receiver(this);
+	}
+	
+	public Offense(Bundle bundle)
+	{
+		super(bundle);
+		mPlayers[QUARTERBACK]=new Quarterback(this,bundle.getBundle("player"+QUARTERBACK));
+		mPlayers[RECEIVER]=new Receiver(this,bundle.getBundle("player"+RECEIVER));
 	}
 	
 	public final Quarterback quarterback() { return (Quarterback)mPlayers[QUARTERBACK]; }
@@ -282,11 +371,17 @@ class Offense extends Team
 	{
 		return preSnapFormation;
 	}
+	
+	public Bundle serialize()
+	{
+		Bundle bundle = super.serialize();
+		return bundle;
+	}
 }
 
 class Defense extends Team
 {
-	private static int[][] preSnapFormation= {{6,0},{6,1},{6,2},{4,1},{2,0},{0,2}}; 
+	private static final int[][] preSnapFormation= {{6,0},{6,1},{6,2},{4,1},{2,0},{0,2}}; 
 	
 	public Defense(int side,int orientation)
 	{
@@ -295,10 +390,24 @@ class Defense extends Team
 			mPlayers[i]=new DefensivePlayer(this);
 	}
 	
+	public Defense(Bundle bundle)
+	{
+		super(bundle);
+		for ( int i=0;i<size();i++)
+			mPlayers[i]=new DefensivePlayer(this,bundle.getBundle("player"+i));
+		
+	}
+	
 	DefensivePlayer getDefender(int idx) { assert(idx < size()); return (DefensivePlayer) mPlayers[idx]; }
 	
 	protected int[][] getPreSnapFormation()
 	{
 		return preSnapFormation;
+	}
+	
+	public Bundle serialize()
+	{
+		Bundle bundle =  super.serialize();
+		return bundle;
 	}
 }

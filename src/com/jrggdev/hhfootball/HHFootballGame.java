@@ -4,7 +4,6 @@ import java.util.Random;
 
 import android.app.Activity;
 import android.content.res.Resources;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -36,22 +35,18 @@ public class HHFootballGame extends Activity
 
 	/** Menus Items */
 	private static final int MENU_NEW_GAME=0;
-	private static final int MENU_EXIT=1;
+	private static final int MENU_SETTINGS=1;
+	private static final int MENU_ABOUT=2;
+	private static final int MENU_QUIT=3;
 	
 	/** Defines whether the game is paused or not */
-	
-	private boolean mPaused = false;
-	
+		
 	/** Game States */
 	protected enum State 
 	{ 
 		GAME_OVER,PLAY_LIVE,PLAY_DEAD,PRE_SNAP,PASS,KICKOFF;
 	}
-	private State mState=State.GAME_OVER;
-	
-	private int mHomeScore=0;
-	private int mVisitorScore=0;
-	
+
 	/**
 	 * Labels for the drawables that will be loaded into the TileView class
 	 */
@@ -148,34 +143,6 @@ public class HHFootballGame extends Activity
 			return String.format("%02d:%04.1f",mins,secs);
 		}
 	}
-	private PlayClock mPlayClock;
-	
-	private static int mNumberofPeriods=4;
-	private int mPeriod;
-	
-	/**
-	 * Game field settings
-	 */
-	private int mFieldPos = 0;
-	private static int mTouchbackPos=20;
-	private static int mDownsPerSeries=4;
-	private int mSeriesDown = 1;
-	private static int mYardsForFirstDown=10;
-	private int mLineOfScrimmage=0;
-	private int mFirstDownPos = 0;
-	private int mStartingXPos=3;
-	private boolean mChangeOfPossesion=false;
-	private boolean mKickOff=false;
-	
-
-	/**
-	 * mQuarterback: current Player of the Quarterback mReceiver: current
-	 * coordiante of the Wide Reciever mDefense: List of Players for the
-	 * defensive players
-	 */
-	private Offense mOffense;
-	private Defense mDefense;
-	
 	
 	private class Percentage
 	{
@@ -214,6 +181,36 @@ public class HHFootballGame extends Activity
 		} 
 	});
 	
+	/**
+	 * Game settings
+	 */
+	
+	private static final int mNumberofPeriods=4;
+	private static final int mTouchbackPos=20;
+	private static final int mDownsPerSeries=4;
+	private static final int mYardsForFirstDown=10;
+	private static final int mStartingXPos=3;
+	
+	private State mState=State.GAME_OVER;
+	private int mHomeScore=0;
+	private int mVisitorScore=0;
+	private PlayClock mPlayClock;
+	private int mPeriod;
+	private int mFieldPos = 0;
+	private int mSeriesDown = 1;
+	private int mLineOfScrimmage=0;
+	private int mFirstDownPos = 0;
+	
+	private boolean mChangeOfPossesion=false;
+	private boolean mKickOff=false;
+	
+	/**
+	 * mQuarterback: current Player of the Quarterback mReceiver: current
+	 * coordiante of the Wide Reciever mDefense: List of Players for the
+	 * defensive players
+	 */
+	private Offense mOffense;
+	private Defense mDefense;
 	
     /**
      * Invoked during init to give the Activity a chance to set up its Menu.
@@ -226,7 +223,9 @@ public class HHFootballGame extends Activity
         super.onCreateOptionsMenu(menu);
 
         menu.add(0, MENU_NEW_GAME, 0, R.string.menu_new_game);
-        menu.add(0, MENU_EXIT, 0, R.string.menu_exit);
+        menu.add(0, MENU_SETTINGS, 0, R.string.menu_settings);
+        menu.add(0, MENU_ABOUT, 0, R.string.menu_about);
+        menu.add(0, MENU_QUIT, 0, R.string.menu_quit);
 
         return true;
     }
@@ -244,7 +243,14 @@ public class HHFootballGame extends Activity
             case MENU_NEW_GAME:
             	startNewGame();
             	return true;
-            case MENU_EXIT:
+            	
+            case MENU_SETTINGS:
+            	return true;
+            
+            case MENU_ABOUT:
+            	return true;
+            	
+            case MENU_QUIT:
                 finish();
                 return true;
         }
@@ -316,7 +322,6 @@ public class HHFootballGame extends Activity
 	{
 		Log.i(TAG,"Activity Paused");
 		super.onPause();
-		mPaused=true;
 		mPlayClock.stop();
 		mAiUpdater.stop();
 		mGameUpdater.stop();
@@ -329,24 +334,19 @@ public class HHFootballGame extends Activity
 	@Override
 	protected void onResume() {
 		super.onResume();
-		if (mPaused)
+		Log.i(TAG,"Activity Resumed");
+		mGameUpdater.start();
+		updateDriveStatus();
+		switch (mState)
 		{
-			Log.i(TAG,"Activity Resumed");
-			mPaused=false;
-			mGameUpdater.start();
-			switch (mState)
-			{
-				case PLAY_LIVE:
-				case PASS:
-				case KICKOFF:
-					mPlayClock.start();
-					mAiUpdater.start();
-					return;
-				default:
-					return;
-				
-			}
-			
+			case PLAY_LIVE:
+			case PASS:
+			case KICKOFF:
+				mPlayClock.start();
+				mAiUpdater.start();
+				return;
+			default:
+				return;	
 		}
 	}
 	
@@ -365,10 +365,11 @@ public class HHFootballGame extends Activity
 		map.putInt("mFieldPos",mFieldPos);
 		map.putInt("mSeriesDown",mSeriesDown);
 		map.putInt("mFirstDownPos",mFirstDownPos);
-//		map.putIntArray("mQuarterback", mQuarterback.to_list());
-//		map.putIntArray("mReceiver", mReceiver.to_list());
-//		map.putIntArray("mDefense", mDefense.to_array());
-				
+		map.putBoolean("mChangeOfPossesion", mChangeOfPossesion);
+		map.putBoolean("mKickOff", mKickOff);
+		map.putBundle("offense", mOffense.serialize());
+		map.putBundle("defense", mDefense.serialize());
+		
 		outState.putBundle(TAG, map);
 	}
 	
@@ -390,9 +391,10 @@ public class HHFootballGame extends Activity
 		mFieldPos=savedState.getInt("mFieldPos");
 		mSeriesDown=savedState.getInt("mSeriesDown");
 		mFirstDownPos=savedState.getInt("mFirstDownPos");
-//		mQuarterback = new Player(savedState.getIntArray("mQuarterback"));
-//		mReceiver = new Player(savedState.getIntArray("mReceiver"));
-//		mDefense = PlayerList.from_array(savedState.getIntArray("mDefense"));
+		mChangeOfPossesion=savedState.getBoolean("mChangeOfPossesion");
+		mKickOff=savedState.getBoolean("mKickOff");
+		mOffense=new Offense(savedState.getBundle("offense"));
+		mDefense=new Defense(savedState.getBundle("defense"));
 	}
 	
 	/**
@@ -410,9 +412,6 @@ public class HHFootballGame extends Activity
 	{
 		return mFieldView.getFieldWidth();
 	}
-	
-	public Offense getOffense() { return mOffense; }
-	public Defense getDefense() { return mDefense; }
 	
 	public void startNewGame()
 	{
@@ -520,16 +519,27 @@ public class HHFootballGame extends Activity
 		if (mPeriod < mNumberofPeriods)
 		{
 			mState = State.PLAY_DEAD;
-			
-			mFieldPos=swapFieldPosOrientation(mFieldPos);
-			mLineOfScrimmage=mFieldPos;
-			mFirstDownPos=swapFieldPosOrientation(mFirstDownPos);
-
 			mPeriod++;
 			mPeriodView.setText(String.format("%d",mPeriod));
 			mPlayClock.set(mPeriodLengthMins);
 			
-			swapOrientation();
+			if (mPeriod > mNumberofPeriods/2)
+			{
+				// Handle half time, swap the start of the game orientation
+				mOffense.setSide(Team.SIDE_VISITOR);
+				mOffense.setOrientation(Team.ORIENTATION_LEFT);
+				mDefense.setSide(Team.SIDE_HOME);
+				mOffense.setOrientation(Team.ORIENTATION_RIGHT);
+				handleTouchBack();
+			}
+			else
+			{
+				// End of quarter, just swap sides
+				mFieldPos=swapFieldPosOrientation(mFieldPos);
+				mLineOfScrimmage=mFieldPos;
+				mFirstDownPos=swapFieldPosOrientation(mFirstDownPos);
+				swapOrientation();
+			}
 		}
 	}
 	
@@ -558,7 +568,7 @@ public class HHFootballGame extends Activity
 		// TODO Handle safety
 		if (mPlayClock.expired())
 		{
-			if (mPeriod+1 >= mNumberofPeriods)
+			if (mPeriod >= mNumberofPeriods)
 			{
 				mState = State.GAME_OVER;
 				mInfoView.setText("Game Over");
@@ -859,10 +869,25 @@ public class HHFootballGame extends Activity
 		Player receiver = mOffense.receiver();
 		
 		mFieldPos+=(receiver.x - quarterback.x);
-		mState=State.PLAY_LIVE;	
 		quarterback.set(receiver.x,receiver.y);
 		receiver.set(-1,-1);
+		mState=State.PLAY_LIVE;	
 		mInfoView.setText("Complete");
+		
+		if (mOffense.orientation() == Team.ORIENTATION_LEFT)
+		{
+			if (mFieldPos <= 0)
+			{
+				handleTouchDown();
+			}
+		}
+		else
+		{
+			if (mFieldPos >= 100)
+			{
+				handleTouchDown();
+			}
+		}
 	}
 	
 	private void handleInterception(Player defender)

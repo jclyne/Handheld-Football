@@ -1,57 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="fill_parent" 
-	android:layout_height="fill_parent"
-	android:background="@drawable/field_background"
-	android:orientation="horizontal">
+	android:layout_width="match_parent" 
+	android:layout_height="match_parent"
+	android:weightSum="1.0"
+	android:orientation="horizontal"
+	android:background="@drawable/field_background">
 
 	<LinearLayout 
-		android:layout_width="fill_parent" 
-		android:layout_height="fill_parent"
-		android:layout_weight="40"
+		android:layout_width="0dip"
+		android:layout_height="match_parent"
+		android:layout_weight="0.7"
 		android:orientation="horizontal"
-		android:layout_gravity="center"
+		android:gravity="center"
 		android:layoutAnimation="@anim/layout_bounce_right">
 		<ImageView 
-				android:layout_width="fill_parent" 
-				android:layout_height="fill_parent" 	
+				android:layout_width="wrap_content" 
+				android:layout_height="match_parent" 	
 				android:src="@drawable/logo"/>
 			
 	</LinearLayout>
 	
 	<LinearLayout
-		android:layout_width="fill_parent" 
-		android:layout_height="fill_parent"
-		android:layout_weight="60"
+		android:layout_width="0dip" 
+		android:layout_height="match_parent"
+		android:layout_weight="0.3"
 		android:orientation="vertical"
-		android:layout_gravity="center_vertical"
+		android:gravity="center"
 		android:layoutAnimation="@anim/layout_bounce_left">
 		<Button
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:layout_gravity="center"
-				android:text="Play"
+				android:background="@drawable/splash_play"
 				android:onClick="onNewGame"/>
 		<Button
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:layout_gravity="center"
-				android:text="Settings"
+				android:background="@drawable/splash_settings"
 				android:onClick="onSettings"/>
 				
 		<Button
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:layout_gravity="center"
-				android:text="About"
+				android:background="@drawable/splash_about"
 				android:onClick="onAbout"/>
 				
 		<Button
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:layout_gravity="center"
-				android:text="Exit"
+				android:background="@drawable/splash_exit"
 				android:onClick="onExit"/>
 		
 	</LinearLayout>	

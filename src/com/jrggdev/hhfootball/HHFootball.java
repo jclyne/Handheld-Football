@@ -17,7 +17,6 @@ public class HHFootball extends Activity
 	
 	public void onNewGame(View view)
 	{
-		finish();
 		Intent intent = new Intent();
 		intent.setClass(this,HHFootballGame.class);
 		startActivity(intent);
