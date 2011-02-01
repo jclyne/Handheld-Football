@@ -43,7 +43,7 @@ public class TextViewAnimator implements Animation.AnimationListener,Timer.Timer
 		mInAnim=inAnim;
 		mOutAnim=outAnim;
 		
-		mTextQueue = new LinkedList();
+		mTextQueue = new LinkedList<TextDisplay> ();
 		mInAnim.setAnimationListener(this);
 		mOutAnim.setAnimationListener(this);
 		mTimer=new Timer(this);
