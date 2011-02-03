@@ -72,12 +72,20 @@
 			android:layout_width="match_parent"
 	        android:layout_height="match_parent"/>
         
+        <ProgressBar
+		 	android:id="@+id/kick_meter"
+			android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:layout_gravity="bottom"
+	        android:visibility="gone"
+	        style="?android:attr/progressBarStyleHorizontal"
+	        android:max="100" />
+	        
         <TextView
 	    	android:id="@+id/info_view"
 	    	android:layout_width="match_parent"
 			android:layout_height="match_parent"
-			android:layout_gravity="center"
-			style="@style/info"/>
+			style="@style/info_land"/>
 			
 	</FrameLayout>
 		

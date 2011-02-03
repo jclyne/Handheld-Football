@@ -17,6 +17,10 @@
 				<action android:name="android.intent.action.MAIN"/>
 			</intent-filter>
 		</activity>
+		<activity 
+			android:name="Settings" 
+			android:title="@string/settings_title" >
+		</activity>
 	</application>
     <uses-sdk android:minSdkVersion="8" />
 

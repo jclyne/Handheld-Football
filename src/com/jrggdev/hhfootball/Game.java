@@ -3,15 +3,20 @@ package com.jrggdev.hhfootball;
 import java.util.Random;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AnimationUtils;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.jrggdev.Percentage;
 import com.jrggdev.TextViewAnimator;
 import com.jrggdev.Timer;
 
@@ -24,7 +29,7 @@ import com.jrggdev.Timer;
  * you'll move faster. Running into yourself or the walls will end the game.
  * 
  */
-public class Game extends Activity
+public class Game extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener
 {
 	private static String TAG = "HHFootball";
 	
@@ -33,23 +38,21 @@ public class Game extends Activity
 	private TextView mDriveView;
 	private TextView mFieldPosView;
 	private TextViewAnimator mInfoView;
-	private TextView mPlayClockView;
-	private TextView mPeriodView;
 	private TextView mHomeScoreView;
 	private TextView mVisitorScoreView;
+	private ProgressBar mKickMeter;
 
 	/** Menus Items */
 	private static final int MENU_NEW_GAME=0;
 	private static final int MENU_SETTINGS=1;
-	private static final int MENU_ABOUT=2;
-	private static final int MENU_QUIT=3;
+	private static final int MENU_QUIT=2;
 	
 	/** Defines whether the game is paused or not */
 		
 	/** Game States */
 	protected enum State 
 	{ 
-		GAME_OVER,PLAY_LIVE,PLAY_DEAD,PRE_SNAP,PASS,KICKOFF;
+		PLAY_LIVE,PLAY_DEAD,PRE_SNAP,PASS;
 	}
 
 	/**
@@ -63,112 +66,37 @@ public class Game extends Activity
 	
 	private static final int[][] mBitmapLookup = {{HOME_LEFT,HOME_RIGHT},{VISITOR_LEFT,VISITOR_RIGHT}};
 	
+	private boolean mQuiet=false;
 	/**
 	 * Represents time left in the period in milliseconds
 	 */
-	private static int mPeriodLengthMins=2;
-	private class PlayClock
+	private int mPeriodLengthMins=2;
+	
+	private enum Difficulty
 	{
-		private float mCounter=0;
-		private boolean mRunning=false;
-		private TextView mTextView;
+		easy(25,10,5),
+		medium(25,10,25),
+		hard(50,10,50);
 		
+		private Percentage mDefenderMoves;
+		private Percentage mReceiverMoves;
+		private Percentage mDefenderTackles;
 		
-		public PlayClock(TextView textView)
+		private Difficulty(int perDefenderMoves, int perReceiverMoves, int perDefenderTackles)
 		{
-			super();
-			mTextView=textView;
+			mDefenderMoves = new Percentage(perDefenderMoves);
+			mReceiverMoves = new Percentage(perReceiverMoves);
+			mDefenderTackles= new Percentage(perDefenderTackles);
 		}
 		
-		public PlayClock(TextView textView,float counter)
-		{
-			super();
-			mTextView=textView;
-			mCounter=counter;
-		}
-		
-		public void tick()
-		{
-			if (mRunning)
-			{
-				mCounter -= 0.1;
-				if (mCounter <= 0)
-				{
-					mCounter = 0;
-					stop();
-				}
+		public Percentage perDefenderMoves() {  return mDefenderMoves; }
+		public Percentage perReceiverMoves() {  return mReceiverMoves; }
+		public Percentage perDefenderTackles() {  return mDefenderTackles; }
 
-				mTextView.setText(PlayClock.this.toString());
-			}
-		}
-		
-		public void set(long timeMins)
-		{
-			set(timeMins,0);
-		}
-		
-		public void set(long timeMins, long timeSecs)
-		{
-			stop();
-			mCounter=timeMins*60 + timeSecs;
-			mTextView.setText(toString());
-		}
-		
-		public void start()
-		{
-			if (mRunning)
-				return;
-			
-			mRunning=true;
-		}
-		
-		public void stop()
-		{
-			if (!mRunning)
-				return; 
-			
-			mRunning=false;
-		}
-		
-		public boolean expired()
-		{
-			return mCounter <= 0;
-		}
-		
-		public float timeLeftSecs()
-		{
-			return mCounter;
-		}
-		
-		public String toString()
-		{
-			int mins=(int)Math.floor(mCounter/60);
-			float secs=mCounter- (mins*60);
-			
-			return String.format("%02d:%04.1f",mins,secs);
-		}
 	}
 	
-	private class Percentage
-	{
-		private Random rand = new Random();
-		private int mPercentage;
-		public Percentage(int percentage)
-		{
-			assert ( percentage >0 && percentage <=100 );
-			mPercentage=percentage;
-		}
-		
-		public boolean test()
-		{
-			return (rand.nextInt(100) < mPercentage);
-		}
-	}
-	private Percentage mDefenderMoves= new Percentage(25);
-	private Percentage mReceiverMoves= new Percentage(10);
-	private Percentage mDefenderTackles= new Percentage(25);
-	
-	
+	private Difficulty mDifficulty=Difficulty.medium;
+
 	private static final int mGameRefreshRate=100;
 	private Timer mGameUpdater = new Timer(mGameRefreshRate,new Timer.TimerHandler() {
 		private boolean mFlashToggle=false;
@@ -186,30 +114,55 @@ public class Game extends Activity
 		} 
 	});
 	
-	private static final int mInfoDuration=2000;
+	private static final int mInfoDuration=1500;
 	
 	/**
 	 * Game settings
 	 */
 	
-	private static final int mNumberofPeriods=4;
 	private static final int mTouchbackPos=20;
 	private static final int mDownsPerSeries=4;
 	private static final int mYardsForFirstDown=10;
 	private static final int mStartingXPos=3;
 	
-	private State mState=State.GAME_OVER;
-	private int mHomeScore=0;
-	private int mVisitorScore=0;
-	private PlayClock mPlayClock;
+	private State mState;
+	private int mHomeScore;
+	private int mVisitorScore;
+	private GameClock mGameClock;
 	private int mPeriod;
-	private int mFieldPos = 0;
-	private int mSeriesDown = 1;
-	private int mLineOfScrimmage=0;
-	private int mFirstDownPos = 0;
+	private int mFieldPos;
+	private int mSeriesDown;
+	private int mLineOfScrimmage;
+	private int mFirstDownPos;
 	
-	private boolean mChangeOfPossesion=false;
-	private boolean mKickOff=false;
+	enum GameState
+	{
+		KICKOFF,
+		FREE_KICK,
+		DRIVE_IN_PROGRESS,
+		TURNOVER_ON_DOWNS,
+		INCOMPLETE,
+		INTERCEPTION,
+		FUMBLE,
+		TOUCHDOWN,
+		FIELD_GOAL,
+		SAFETY;
+		
+		public boolean isTurnover()
+		{
+			switch (this)
+			{
+				case TURNOVER_ON_DOWNS:
+				case INTERCEPTION:
+				case FUMBLE:
+					return true;
+				default:
+					return false;
+			}
+		}
+	}
+	
+	private GameState mGameState;
 	
 	/**
 	 * mQuarterback: current Player of the Quarterback mReceiver: current
@@ -231,7 +184,6 @@ public class Game extends Activity
 
         menu.add(0, MENU_NEW_GAME, 0, R.string.menu_new_game);
         menu.add(0, MENU_SETTINGS, 0, R.string.menu_settings);
-        menu.add(0, MENU_ABOUT, 0, R.string.menu_about);
         menu.add(0, MENU_QUIT, 0, R.string.menu_quit);
 
         return true;
@@ -252,9 +204,9 @@ public class Game extends Activity
             	return true;
             	
             case MENU_SETTINGS:
-            	return true;
-            
-            case MENU_ABOUT:
+            	Intent intent = new Intent();
+        		intent.setClass(this,Settings.class);
+        		startActivity(intent);
             	return true;
             	
             case MENU_QUIT:
@@ -280,17 +232,23 @@ public class Game extends Activity
 		mFieldView = (FieldView)findViewById(R.id.hhfootballview);		
 		mDriveView = (TextView)findViewById(R.id.drive_view);
 		mFieldPosView = (TextView)findViewById(R.id.fieldpos_view);
-		
-		mPlayClockView = (TextView)findViewById(R.id.scoreboard_clock);
-		mPeriodView = (TextView)findViewById(R.id.scoreboard_period);
 		mHomeScoreView = (TextView)findViewById(R.id.scoreboard_home);
 		mVisitorScoreView = (TextView)findViewById(R.id.scoreboard_visitor);
 				
+		mKickMeter= (ProgressBar)findViewById(R.id.kick_meter);
+		assert(mKickMeter.isIndeterminate() == false);
 		mInfoView = new TextViewAnimator((TextView)findViewById(R.id.info_view),
 											AnimationUtils.loadAnimation(this, R.anim.scroll_in),
 											AnimationUtils.loadAnimation(this, R.anim.scroll_out));
 		
-		mPlayClock = new PlayClock(mPlayClockView);
+		// Get the current settings values
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+		mQuiet=settings.getBoolean("sound", mQuiet);
+		mPeriodLengthMins=Integer.parseInt(settings.getString("period_length", 
+											String.valueOf(mPeriodLengthMins)));
+		mDifficulty = Difficulty.valueOf(settings.getString("difficulty", mDifficulty.name()));
+		
+		settings.registerOnSharedPreferenceChangeListener(this);
 	}
 	
 	/* (non-Javadoc)
@@ -334,7 +292,7 @@ public class Game extends Activity
 	{
 		Log.i(TAG,"Activity Paused");
 		super.onPause();
-		mPlayClock.stop();
+		mGameClock.stop();
 		mAiUpdater.stop();
 		mGameUpdater.stop();
 	}
@@ -353,8 +311,7 @@ public class Game extends Activity
 		{
 			case PLAY_LIVE:
 			case PASS:
-			case KICKOFF:
-				mPlayClock.start();
+				mGameClock.start();
 				mAiUpdater.start();
 				return;
 			default:
@@ -369,20 +326,40 @@ public class Game extends Activity
 		Bundle map = new Bundle();
 		
 		map.putInt("mState",mState.ordinal());
+		map.putInt("mGameState",mGameState.ordinal());
 		map.putInt("mHomeScore",mHomeScore);
 		map.putInt("mVisitorScore",mVisitorScore);
-		map.putFloat("mPlayClock",mPlayClock.timeLeftSecs());
+		map.putBundle("mGameClock",mGameClock.serialize());
+		map.putInt("mPeriodLengthMins",mPeriodLengthMins);
 		map.putInt("mPeriod",mPeriod);
 		map.putInt("mLineOfScrimmage",mLineOfScrimmage);
 		map.putInt("mFieldPos",mFieldPos);
 		map.putInt("mSeriesDown",mSeriesDown);
 		map.putInt("mFirstDownPos",mFirstDownPos);
-		map.putBoolean("mChangeOfPossesion", mChangeOfPossesion);
-		map.putBoolean("mKickOff", mKickOff);
+
 		map.putBundle("offense", mOffense.serialize());
 		map.putBundle("defense", mDefense.serialize());
 		
 		outState.putBundle(TAG, map);
+	}
+	
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences settings, String key)
+	{
+		if (key.equals("sound"))
+		{
+			mQuiet=settings.getBoolean("sound", mQuiet);
+		}
+//		else if (key.equals("period_length"))
+//		{
+//			mPeriodLengthMins=Integer.parseInt(settings.getString("period_length", 
+//												String.valueOf(mPeriodLengthMins)));
+//		}
+		else if (key.equals("difficulty"))
+		{
+			mDifficulty = Difficulty.valueOf(settings.getString("difficulty", mDifficulty.name()));
+		}
+		
 	}
 	
 
@@ -395,19 +372,22 @@ public class Game extends Activity
 	public void restoreState(Bundle savedState)
 	{
 		mState=State.values()[savedState.getInt("mState")];
+		mGameState=GameState.values()[savedState.getInt("mGameState")];
 		mHomeScore=savedState.getInt("mHomeScore");
 		mVisitorScore=savedState.getInt("mVisitorScore");
-		mPlayClock=new PlayClock(mPlayClockView, savedState.getFloat("mPlayClock"));
+		mGameClock=new GameClock(savedState.getBundle("mGameClock"),
+				(TextView)findViewById(R.id.scoreboard_clock),
+				(TextView)findViewById(R.id.scoreboard_period));
 		mPeriod=savedState.getInt("mPeriod");
+		mPeriodLengthMins=savedState.getInt("mPeriodLengthMins");
 		mLineOfScrimmage=savedState.getInt("mLineOfScrimmage");
 		mFieldPos=savedState.getInt("mFieldPos");
 		mSeriesDown=savedState.getInt("mSeriesDown");
 		mFirstDownPos=savedState.getInt("mFirstDownPos");
-		mChangeOfPossesion=savedState.getBoolean("mChangeOfPossesion");
-		mKickOff=savedState.getBoolean("mKickOff");
 		mOffense=new Offense(savedState.getBundle("offense"));
 		mDefense=new Defense(savedState.getBundle("defense"));
 	}
+	
 	
 	/**
 	 * Returns the number of tiles long (between the end zones) the playing field is
@@ -429,13 +409,12 @@ public class Game extends Activity
 	{
 		mOffense = new Offense(Team.SIDE_HOME,Team.ORIENTATION_LEFT);
 		mDefense = new Defense(Team.SIDE_VISITOR,Team.ORIENTATION_RIGHT);
+		mGameClock = new GameClock(mPeriodLengthMins,
+				(TextView)findViewById(R.id.scoreboard_clock),
+				(TextView)findViewById(R.id.scoreboard_period));
 		mHomeScore=0;
 		mVisitorScore=0;
-		mPeriod=1;
-		mPlayClock.set(mPeriodLengthMins);
-		mPeriodView.setText(String.format("%d",mPeriod));
-		handleTouchBack();
-		
+		mGameState=GameState.KICKOFF;
 		mGameUpdater.start();
 		initPreSnap();
 	}
@@ -443,15 +422,20 @@ public class Game extends Activity
 
 	private void initPreSnap()
 	{
-		if (mPlayClock.expired())
-			handleNewPeriod();	
+		handleNewPeriod();	
 		
 		mLineOfScrimmage=mFieldPos;
-		if (mKickOff)
-			handleKickoff();
-		else if (mChangeOfPossesion)
-			handleChangeOfPossesion();
-
+		switch (mGameState)
+		{
+			case KICKOFF:
+				handleKickoff();
+				break;
+			case TURNOVER_ON_DOWNS:
+			case INTERCEPTION:
+			case FUMBLE:
+				handleChangeOfPossesion();
+				break;
+		}
 		
 		arrangePreSnapFormation(mOffense);
 		arrangePreSnapFormation(mDefense);
@@ -528,29 +512,33 @@ public class Game extends Activity
 	
 	private void handleNewPeriod()
 	{
-		if (mPeriod < mNumberofPeriods)
+		if (mGameClock.expired())
 		{
-			mState = State.PLAY_DEAD;
-			mPeriod++;
-			mPeriodView.setText(String.format("%d",mPeriod));
-			mPlayClock.set(mPeriodLengthMins);
-			
-			if (mPeriod > mNumberofPeriods/2)
+			switch (mGameClock.period())
 			{
-				// Handle half time, swap the start of the game orientation
-				mOffense.setSide(Team.SIDE_VISITOR);
-				mOffense.setOrientation(Team.ORIENTATION_LEFT);
-				mDefense.setSide(Team.SIDE_HOME);
-				mOffense.setOrientation(Team.ORIENTATION_RIGHT);
-				handleTouchBack();
-			}
-			else
-			{
-				// End of quarter, just swap sides
-				mFieldPos=swapFieldPosOrientation(mFieldPos);
-				mLineOfScrimmage=mFieldPos;
-				mFirstDownPos=swapFieldPosOrientation(mFirstDownPos);
-				swapOrientation();
+				case END_OF_FIRST_QUARTER:
+				case END_OF_THIRD_QUARTER:	
+					// End of quarter, just swap sides
+					mFieldPos=swapFieldPosOrientation(mFieldPos);
+					mLineOfScrimmage=mFieldPos;
+					mFirstDownPos=swapFieldPosOrientation(mFirstDownPos);
+					swapOrientation();
+					mGameClock.set_period();
+					mInfoView.setText(getString(R.string.info_change_sides),mInfoDuration);
+					break;
+				case HALFTIME:	
+					mOffense.setSide(Team.SIDE_VISITOR);
+					mOffense.setOrientation(Team.ORIENTATION_LEFT);
+					mDefense.setSide(Team.SIDE_HOME);
+					mDefense.setOrientation(Team.ORIENTATION_RIGHT);
+					mGameState=GameState.KICKOFF;
+					mGameClock.set_period();
+					mInfoView.setText(getString(R.string.info_kickoff),mInfoDuration);
+					break;
+				case GAME_OVER:
+					return;
+				default:
+					break;
 			}
 		}
 	}
@@ -567,41 +555,77 @@ public class Game extends Activity
 		swapOrientation();
 		mSeriesDown = 1;
 		setFirstDownPos();
-		mChangeOfPossesion=false;
+		mGameState=GameState.DRIVE_IN_PROGRESS;
 	}
 	
 	private void handlePlayDead()
 	{
-		mPlayClock.stop();
+		mGameClock.stop();
 		mAiUpdater.stop();
 		mState = State.PLAY_DEAD;
 			
-		// TODO HAndle turnover in the end zone
-		// TODO Handle safety
-		if (mPlayClock.expired())
+		switch (mGameState)
 		{
-			if (mPeriod >= mNumberofPeriods)
-			{
-				mState = State.GAME_OVER;
-				mInfoView.setText("Game Over");
-				return;
-			}
+			case TOUCHDOWN:
+				mInfoView.setText(getString(R.string.info_touchdown),mInfoDuration);
+				mGameState=GameState.KICKOFF;
+				break;
+				
+			case INTERCEPTION:
+				mInfoView.setText(getString(R.string.info_interception),mInfoDuration);
+				break;
+				
+			case INCOMPLETE:
+				mInfoView.setText(getString(R.string.info_incomplete),mInfoDuration);
+				mGameState=GameState.DRIVE_IN_PROGRESS;
+				
+			case DRIVE_IN_PROGRESS:
+				if (checkFirstDown())
+				{
+					handleFirstDown();
+					mInfoView.setText(getString(R.string.info_first_down),mInfoDuration);
+				}
+				else if (mSeriesDown == mDownsPerSeries)
+				{
+					// Turnover on downs
+					mGameState=GameState.TURNOVER_ON_DOWNS;
+					mInfoView.setText(getString(R.string.info_turnover_on_downs),mInfoDuration);
+				}
+				else
+				{
+					switch (++mSeriesDown)
+					{
+						case 2:
+							mInfoView.setText(getString(R.string.info_second_down),mInfoDuration);
+							break;
+							
+						case 3:
+							mInfoView.setText(getString(R.string.info_third_down),mInfoDuration);
+							break;
+									
+						case 4:
+							mInfoView.setText(getString(R.string.info_fourth_down),mInfoDuration);
+							break;
+					}
+				}
+				break;
 		}
-		if (checkFirstDown())
+		
+		switch (mGameClock.period())
 		{
-			handleFirstDown();
-			mInfoView.setText("First Down",mInfoDuration);
-		}
-		else if (mSeriesDown < mDownsPerSeries)
-		{
-			// Drive is still alive
-			mSeriesDown++;
-		}
-		else if (mSeriesDown == mDownsPerSeries)
-		{
-			// Turnover on downs
-			mChangeOfPossesion=true;
-			mInfoView.setText("Turnover on Downs",mInfoDuration);
+			case END_OF_FIRST_QUARTER:
+				mInfoView.setText(getString(R.string.info_end_of_first_quarter),mInfoDuration);
+				break;
+			case HALFTIME:
+				mInfoView.setText(getString(R.string.info_halftime));
+				break;
+			case END_OF_THIRD_QUARTER:
+				mInfoView.setText(getString(R.string.info_end_of_third_quarter),mInfoDuration);
+				break;
+			case GAME_OVER:
+				mInfoView.setText(getString(R.string.info_game_over));
+				mGameUpdater.stop();
+				break;
 		}
 	}
 	
@@ -618,14 +642,11 @@ public class Game extends Activity
 		swapSides();
 		swapOrientation();
 		handleTouchBack();
-		mKickOff=false;
+		mGameState=GameState.DRIVE_IN_PROGRESS;
 	}
 	
 	private void handleTouchDown()
 	{
-		mPlayClock.stop();
-		mState=State.PLAY_DEAD;
-		
 		if (mOffense.side() == Team.SIDE_HOME)
 		{
 			mHomeScore+=7;
@@ -635,15 +656,17 @@ public class Game extends Activity
 			mVisitorScore+=7;
 		}
 		
-		mInfoView.setText("Touchdown",mInfoDuration);
-		mKickOff=true;
+		mGameState=GameState.TOUCHDOWN;
+		updateScoreBoard();
+		handlePlayDead();
 	}
 	
 	private Random recRand=new Random();
 	private void handleSnap()
 	{
+		mInfoView.clearText();
 		mState = State.PLAY_LIVE;
-		mPlayClock.start();
+		mGameClock.start();
 		mOffense.receiver().set((mOffense.orientation() == Team.ORIENTATION_RIGHT)?
 								mOffense.quarterback().x+2:
 									mOffense.quarterback().x-2, recRand.nextInt(3));
@@ -905,9 +928,8 @@ public class Game extends Activity
 	{
 		mFieldPos+=(defender.x - mOffense.quarterback().x);
 		defender.setFlashing(true);
-		mChangeOfPossesion=true;
+		mGameState=GameState.INTERCEPTION;
 		handlePlayDead();
-		mInfoView.setText("Interception",mInfoDuration);
 	} 
 	
 	private void handlePass()
@@ -919,6 +941,8 @@ public class Game extends Activity
 		// Check for incomplete pass
 		if (newX < 0 || newX >= getFieldLength())
 		{
+			mGameState=GameState.INCOMPLETE;
+			mFieldPos=mLineOfScrimmage;
 			handlePlayDead();
 			return;
 		}
@@ -965,7 +989,9 @@ public class Game extends Activity
 	
 	protected void OnMoveReceiver()
 	{
-		if ( !mReceiverMoves.test() || mOffense.receiver().x == -1 || mOffense.receiver().y == -1)
+		if ( !mDifficulty.perReceiverMoves().test() || 
+				mOffense.receiver().x == -1 ||
+					mOffense.receiver().y == -1)
 			return;
 		
 		movePlayerRelativePosition(mOffense.receiver(),
@@ -987,7 +1013,7 @@ public class Game extends Activity
 			if ((Math.abs(defender.x-ballCarrier.x) + 
 			      Math.abs(defender.y-ballCarrier.y)) == 1)
 			{
-				if (mDefenderTackles.test())
+				if (mDifficulty.perDefenderTackles().test())
 					return defender;
 			}
 		}
@@ -998,7 +1024,7 @@ public class Game extends Activity
 	private Random bRand=new Random();
 	protected void OnMoveDefense() 
 	{
-		if ( ! mDefenderMoves.test())
+		if ( ! mDifficulty.perDefenderMoves().test())
 		{
 			Log.d(TAG,"onMoveDefense, not moving any defenders");
 			return;
@@ -1132,7 +1158,7 @@ public class Game extends Activity
 
 	private void updateGame(boolean flash)
 	{
-		mPlayClock.tick();
+		mGameClock.tick();
 		updateField(flash);
 	}
 	
@@ -1177,10 +1203,6 @@ public class Game extends Activity
 				mFieldView.setTile(FOOTBALL,passX,mOffense.quarterback().y);
 				break;
 				
-			case GAME_OVER:
-				return;
-				
-			case KICKOFF:
 			default:
 				break;
 		}

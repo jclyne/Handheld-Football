@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android">
+  
+	<CheckBoxPreference
+	  android:key="sound"
+	  android:persistent="true"
+	  android:title="@string/setting_sound"
+	  android:summaryOn="@string/setting_sound_summary_on"
+	  android:summaryOff="@string/setting_sound_summary_off"
+	  android:defaultValue="@string/setting_sound_default_value"/>
+	       
+	<ListPreference
+	  android:key="period_length"
+	  android:persistent="true"
+	  android:title="@string/setting_period_length"
+	  android:summary="@string/setting_period_length_summary"
+	  android:entries="@array/setting_period_length_entries"
+	  android:entryValues="@array/setting_period_length_entry_values"
+	  android:defaultValue="@string/setting_period_length_default_value"
+	  android:dialogTitle="@string/setting_period_length_dialog_title"/>
+	       
+	<ListPreference
+	  android:key="difficulty"
+	  android:persistent="true"
+	  android:title="@string/setting_difficulty"
+	  android:summary="@string/setting_difficulty_summary"
+	  android:entries="@array/setting_difficulty_entries"
+	  android:entryValues="@array/setting_difficulty_entry_values"
+	  android:defaultValue="@string/setting_difficulty_default_value"
+	  android:dialogTitle="@string/setting_difficulty_dialog_title"/>
+	
+</PreferenceScreen>

@@ -3,6 +3,7 @@ package com.jrggdev;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import android.graphics.Color;
 import android.view.animation.Animation;
 import android.widget.TextView;
 
@@ -43,7 +44,7 @@ public class TextViewAnimator implements Animation.AnimationListener,Timer.Timer
 		mInAnim=inAnim;
 		mOutAnim=outAnim;
 		
-		mTextQueue = new LinkedList<TextDisplay> ();
+		mTextQueue = new LinkedList<TextDisplay>();
 		mInAnim.setAnimationListener(this);
 		mOutAnim.setAnimationListener(this);
 		mTimer=new Timer(this);
@@ -53,12 +54,12 @@ public class TextViewAnimator implements Animation.AnimationListener,Timer.Timer
 	{
 		if (animation == mOutAnim)
 		{
+			mTextView.setBackgroundColor(0x00000000);
 			mTextView.setText("");
 			if (! mTextQueue.isEmpty() )
 			{
 				mTextView.startAnimation(mInAnim);
 				mTextView.invalidate();
-				
 			}
 		}
 	}
@@ -73,6 +74,7 @@ public class TextViewAnimator implements Animation.AnimationListener,Timer.Timer
 		if (animation == mInAnim)
 		{
 			TextDisplay disp=mTextQueue.remove();
+			mTextView.setBackgroundColor(0x50000000);
 			mTextView.setText(disp.getText());
 			if (disp.getDisplayMillis() > 0)
 				mTimer.start(disp.getDisplayMillis());
@@ -103,5 +105,11 @@ public class TextViewAnimator implements Animation.AnimationListener,Timer.Timer
 	{
 		mTextView.startAnimation(mOutAnim);
 		mTextView.invalidate();
+	}
+	
+	public void clear()
+	{
+		mTextQueue.clear();
+		clearText();
 	}
 }
