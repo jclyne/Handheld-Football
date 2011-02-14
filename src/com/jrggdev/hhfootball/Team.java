@@ -4,8 +4,6 @@ import java.util.Random;
 
 import android.os.Bundle;
 
-import com.jrggdev.Coordinate;
-
 abstract class Team implements Iterable<Player>
 {
 	public static final int SIDE_HOME=0;

@@ -3,7 +3,6 @@ package com.jrggdev;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import android.graphics.Color;
 import android.view.animation.Animation;
 import android.widget.TextView;
 

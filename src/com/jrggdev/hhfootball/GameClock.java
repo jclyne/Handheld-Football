@@ -1,7 +1,6 @@
 package com.jrggdev.hhfootball;
 
 import android.os.Bundle;
-import android.widget.TextView;
 
 public class GameClock
 {

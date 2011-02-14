@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.util.AttributeSet;
 import android.widget.ProgressBar;
 
-import com.jrggdev.Coordinate;
 import com.jrggdev.Timer;
 import com.jrggdev.Timer.TimerHandler;
 

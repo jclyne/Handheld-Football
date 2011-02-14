@@ -7,7 +7,6 @@ import java.util.Iterator;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.SoundPool;
 import android.util.Log;
 
 public class SoundManager
@@ -23,7 +22,6 @@ public class SoundManager
 	
 	private Context mContext;
 	private AudioManager  mAudioManager;
-	private SoundPool mSoundPool;
 	private HashMap<Integer,SoundPoolStream> mSfxTable;
 	private boolean mMute=false;
 	private boolean mPaused=false;
