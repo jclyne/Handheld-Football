@@ -5,9 +5,6 @@ import android.widget.TextView;
 
 public class GameClock
 {
-	private TextView mClockView;
-	private TextView mPeriodView;
-	
 	enum Period
 	{
 		FIRST_QUARTER,
@@ -45,23 +42,30 @@ public class GameClock
 	private Period mPeriod;
 	private long mPeriodLength;
 	
-	public GameClock(long periodLength,TextView clockView,TextView periodView)
+	public interface GameClockHandler
+	{
+		public void updateClockDisplay(float secs);
+		public void updatePeriodDisplay(Period period);
+		public void handleClockExpired();
+	}
+	private GameClockHandler mHandler;
+	
+	
+	public GameClock(long periodLength,GameClockHandler handler)
 	{
 		super();
-		mClockView=clockView;
-		mPeriodView=periodView;
-		mPeriodLength = periodLength;
 		
+		mHandler=handler;
+		mPeriodLength = periodLength;
 		mPeriod=Period.FIRST_QUARTER;
 		resetClock();
 	}
 	
-	public GameClock(Bundle bundle,TextView clockView,TextView periodView)
+	public GameClock(Bundle bundle,GameClockHandler handler)
 	{
 		super();
-		mClockView=clockView;
-		mPeriodView=periodView;
-		
+
+		mHandler=handler;
 		mClock=bundle.getFloat("mClock");
 		mRunning=bundle.getBoolean("mRunning");
 		mPeriod=Period.values()[bundle.getInt("mPeriod")];
@@ -77,7 +81,7 @@ public class GameClock
 		bundle.putLong("mPeriodLength",mPeriodLength);
 		return bundle;
 	}
-	
+
 	public void tick()
 	{
 		if (mRunning)
@@ -87,20 +91,20 @@ public class GameClock
 			{
 				mClock = 0;
 				stop();
-				
+				mHandler.handleClockExpired();
 				mPeriod=Period.values()[mPeriod.ordinal()+1];
 			}
 		}
 		
-		updatePeriodDisplay();
-		updateClockDisplay();
+		mHandler.updatePeriodDisplay(mPeriod);
+		mHandler.updateClockDisplay(mClock);
 	}
 	
 	public void resetClock()
 	{
 		stop();
 		mClock=mPeriodLength*60;
-		updateClockDisplay();
+		mHandler.updateClockDisplay(mClock);
 	}
 	
 	public void set_period()
@@ -108,7 +112,7 @@ public class GameClock
 		if (mPeriod != Period.GAME_OVER)
 		{
 			mPeriod=Period.values()[mPeriod.ordinal()+1];
-			updatePeriodDisplay();
+			mHandler.updatePeriodDisplay(mPeriod);
 			resetClock();
 		}
 	}
@@ -144,15 +148,13 @@ public class GameClock
 		return mClock;
 	}
 	
-	public void updateClockDisplay()
-	{
-		int mins=(int)Math.floor(mClock/60);
-		float secs=mClock- (mins*60);
-		mClockView.setText(String.format("%02d:%04.1f",mins,secs));
-	}
-	
-	public void updatePeriodDisplay()
-	{
-		mPeriodView.setText(String.format("%d",mPeriod.toInt()));
-	}
+//	public void updateClockDisplay(int mins, float secs)
+//	{
+//		mClockView.setText(String.format("%02d:%04.1f",mins,secs));
+//	}
+//	
+//	public void updatePeriodDisplay(Period period)
+//	{
+//		mPeriodView.setText(String.format("%d",period()));
+//	}
 }

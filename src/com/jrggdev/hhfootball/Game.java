@@ -20,6 +20,7 @@ import com.jrggdev.Percentage;
 import com.jrggdev.SoundManager;
 import com.jrggdev.TextViewAnimator;
 import com.jrggdev.Timer;
+import com.jrggdev.hhfootball.GameClock.Period;
 
 
 /**
@@ -31,12 +32,14 @@ import com.jrggdev.Timer;
  * you'll move faster. Running into yourself or the walls will end the game.
  * 
  */
-public class Game extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener
+public class Game extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener, GameClock.GameClockHandler
 {
 	private static String TAG = "HHFootball";
 	
 	/** Child view definitions */
 	private FieldView mFieldView;
+	private TextView mClockView;
+	private TextView mPeriodView;
 	private TextView mDriveView;
 	private TextView mFieldPosView;
 	private TextViewAnimator mInfoView;
@@ -59,6 +62,8 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	private static final int AUDIO_TOUCHDOWN=7;
 	private static final int AUDIO_KICK=8;
 	private static final int AUDIO_CATCH=9;
+	private static final int AUDIO_FIRST_DOWN=10;
+	private static final int AUDIO_BUZZER=11;
 	
 	/** Defines whether the game is paused or not */
 		
@@ -251,6 +256,8 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		setContentView(R.layout.hhfootball_layout);
 		
 		mFieldView = (FieldView)findViewById(R.id.hhfootballview);		
+		mClockView=(TextView)findViewById(R.id.scoreboard_clock);
+		mPeriodView=(TextView)findViewById(R.id.scoreboard_period);
 		mDriveView = (TextView)findViewById(R.id.drive_view);
 		mFieldPosView = (TextView)findViewById(R.id.fieldpos_view);
 		mHomeScoreView = (TextView)findViewById(R.id.scoreboard_home);
@@ -414,9 +421,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mGameState=GameState.values()[savedState.getInt("mGameState")];
 		mHomeScore=savedState.getInt("mHomeScore");
 		mVisitorScore=savedState.getInt("mVisitorScore");
-		mGameClock=new GameClock(savedState.getBundle("mGameClock"),
-				(TextView)findViewById(R.id.scoreboard_clock),
-				(TextView)findViewById(R.id.scoreboard_period));
+		mGameClock=new GameClock(savedState.getBundle("mGameClock"),this);
 		mKickMeter.restore(savedState.getBundle("mKickMeter"));
 		mPeriod=savedState.getInt("mPeriod");
 		mPeriodLengthMins=savedState.getInt("mPeriodLengthMins");
@@ -442,7 +447,8 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mSoundManager.addSfx(AUDIO_KICK, R.raw.kick);
 		mSoundManager.addSfx(AUDIO_CATCH, R.raw.ball_catch);
 		mSoundManager.addSfx(AUDIO_TOUCHDOWN,R.raw.touchdown);
-		
+		mSoundManager.addSfx(AUDIO_FIRST_DOWN,R.raw.firstdown);
+		mSoundManager.addSfx(AUDIO_BUZZER,R.raw.buzzer);
 		mSoundManager.setSfxVolume(AUDIO_CROWD, 0.1f);
 		mSoundManager.playSfx(AUDIO_CROWD,true);
 	}
@@ -468,9 +474,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mOffense = new Offense(Team.SIDE_HOME,Team.ORIENTATION_LEFT);
 		mDefense = new Defense(Team.SIDE_VISITOR,Team.ORIENTATION_RIGHT);
 		mBallPos = new Coordinate(mOffense.quarterback().pos());
-		mGameClock = new GameClock(mPeriodLengthMins,
-				(TextView)findViewById(R.id.scoreboard_clock),
-				(TextView)findViewById(R.id.scoreboard_period));
+		mGameClock = new GameClock(mPeriodLengthMins,this);
 		mHomeScore=0;
 		mVisitorScore=0;
 		mGameState=GameState.KICKOFF;
@@ -711,6 +715,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				if (checkFirstDown())
 				{
 					handleFirstDown();
+					mSoundManager.playSfx(AUDIO_FIRST_DOWN,false);
 					mInfoView.setText(getString(R.string.info_first_down),mInfoDuration);
 				}
 				else if (mSeriesDown == mDownsPerSeries)
@@ -1508,6 +1513,22 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		}
 			
 		updateField(flash);
+	}
+	public void updateClockDisplay(float clock) 
+	{
+		int mins=(int)Math.floor(clock/60);
+		float secs=clock- (mins*60);
+		mClockView.setText(String.format("%02d:%04.1f",mins,secs));
+	}
+
+	public void updatePeriodDisplay(Period period) 
+	{
+		mPeriodView.setText(String.format("%d",period.toInt()));
+	}
+
+	public void handleClockExpired() 
+	{
+		mSoundManager.playSfx(AUDIO_BUZZER,false);
 	}
 	
 	private void setPlayerTile(Player player, int bitmapIdx,boolean flash)
