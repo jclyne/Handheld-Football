@@ -5,24 +5,29 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
+import android.widget.LinearLayout;
+
+import com.jrggdev.Timer;
 
 public class HHFootball extends Activity
 {
 	private static final int ABOUT_DIALOG=1;
 	private AlertDialog mAboutDialog;
-	private boolean mQuiet;
+	
+	private MediaPlayer mSplashSound;
+	Timer T;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		SharedPreferences settings = 
-				PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-		mQuiet=settings.getBoolean("sound", mQuiet);
+		setContentView(R.layout.splash);
+		
 		mAboutDialog = new AlertDialog.Builder(this) 
 				.setMessage("ABOUT")
 				.setCancelable(false)
@@ -30,11 +35,27 @@ public class HHFootball extends Activity
 			           public void onClick(DialogInterface dialog, int id) {
 			                dialog.cancel();
 			           }
-			     }).create();
+			     })
+			     .create();
+
+		mSplashSound= MediaPlayer.create(this, R.raw.splash);
+		((LinearLayout)findViewById(R.id.logoview)).setLayoutAnimationListener(new AnimationListener(){
+			public void onAnimationEnd(Animation animation)
+			{
+			}
+
+			public void onAnimationRepeat(Animation animation)
+			{				
+			}
+
+			public void onAnimationStart(Animation animation)
+			{		
+				mSplashSound.start();
+			}
+		});
 		
-		setContentView(R.layout.splash);
 	}
-	
+
 	@Override
 	protected Dialog onCreateDialog(int id)
 	{

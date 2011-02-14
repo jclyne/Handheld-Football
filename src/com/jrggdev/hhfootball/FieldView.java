@@ -101,6 +101,7 @@ public class FieldView extends View
 	{
 		super(context, attrs, defStyle);
 		setFocusable(true);
+		mTileGrid = new int[mXTileCount][mYTileCount];
 	}
 
 	/**
@@ -112,6 +113,7 @@ public class FieldView extends View
 	{
 		super(context, attrs);
 		setFocusable(true);
+		mTileGrid = new int[mXTileCount][mYTileCount];
 	}
 
 	/**
@@ -163,8 +165,6 @@ public class FieldView extends View
 		 * Now draw the field into mFieldBitmap. 
 		 */
 		drawFieldBitmap();
-
-		mTileGrid = new int[mXTileCount][mYTileCount];
 		for (int i = 0; i < mTileBitmapArray.length; i++)
 		{
 			if (mTileBitmapArray[i] != null)

@@ -89,11 +89,11 @@ public class GameClock
 				stop();
 				
 				mPeriod=Period.values()[mPeriod.ordinal()+1];
-				updatePeriodDisplay();
 			}
-
-			updateClockDisplay();
 		}
+		
+		updatePeriodDisplay();
+		updateClockDisplay();
 	}
 	
 	public void resetClock()

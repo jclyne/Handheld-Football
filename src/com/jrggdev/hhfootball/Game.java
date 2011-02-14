@@ -13,12 +13,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AnimationUtils;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.jrggdev.Coordinate;
 import com.jrggdev.Percentage;
+import com.jrggdev.SoundManager;
 import com.jrggdev.TextViewAnimator;
 import com.jrggdev.Timer;
+
 
 /**
  * HHFootball: a simple game that everyone can enjoy.
@@ -40,19 +42,30 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	private TextViewAnimator mInfoView;
 	private TextView mHomeScoreView;
 	private TextView mVisitorScoreView;
-	private ProgressBar mKickMeter;
+	private KickMeter mKickMeter;
 
 	/** Menus Items */
 	private static final int MENU_NEW_GAME=0;
 	private static final int MENU_SETTINGS=1;
 	private static final int MENU_QUIT=2;
 	
+	private SoundManager mSoundManager;
+	private static final int AUDIO_QUARTERBACK=1;
+	private static final int AUDIO_TACKLE=2;
+	private static final int AUDIO_WHISTLE=3;
+	private static final int AUDIO_CROWD=4;
+	private static final int AUDIO_CROWD_BOO=5;
+	private static final int AUDIO_CROWD_CHEER=6;
+	private static final int AUDIO_TOUCHDOWN=7;
+	private static final int AUDIO_KICK=8;
+	private static final int AUDIO_CATCH=9;
+	
 	/** Defines whether the game is paused or not */
 		
 	/** Game States */
 	protected enum State 
 	{ 
-		PLAY_LIVE,PLAY_DEAD,PRE_SNAP,PASS;
+		PLAY_LIVE,PLAY_DEAD,PRE_SNAP,PRE_KICKOFF,KICK,PASS,GAME_OVER;
 	}
 
 	/**
@@ -66,37 +79,38 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	
 	private static final int[][] mBitmapLookup = {{HOME_LEFT,HOME_RIGHT},{VISITOR_LEFT,VISITOR_RIGHT}};
 	
-	private boolean mQuiet=false;
 	/**
 	 * Represents time left in the period in milliseconds
 	 */
-	private int mPeriodLengthMins=2;
+	private int mPeriodLengthMins=4;
 	
 	private enum Difficulty
 	{
-		easy(25,10,5),
-		medium(25,10,25),
-		hard(50,10,50);
+		easy(25,10,0,90),
+		medium(25,10,25,80),
+		hard(50,10,50,70);
 		
 		private Percentage mDefenderMoves;
 		private Percentage mReceiverMoves;
 		private Percentage mDefenderTackles;
+		private Percentage mFieldGoalIsGood;
 		
-		private Difficulty(int perDefenderMoves, int perReceiverMoves, int perDefenderTackles)
+		private Difficulty(int perDefenderMoves, int perReceiverMoves, int perDefenderTackles,int perFieldGoalIsGood)
 		{
 			mDefenderMoves = new Percentage(perDefenderMoves);
 			mReceiverMoves = new Percentage(perReceiverMoves);
 			mDefenderTackles= new Percentage(perDefenderTackles);
+			mFieldGoalIsGood= new Percentage(perFieldGoalIsGood);
 		}
 		
 		public Percentage perDefenderMoves() {  return mDefenderMoves; }
 		public Percentage perReceiverMoves() {  return mReceiverMoves; }
 		public Percentage perDefenderTackles() {  return mDefenderTackles; }
-
+		public Percentage perFieldGoalIsGood() {  return mFieldGoalIsGood; }
 	}
 	
 	private Difficulty mDifficulty=Difficulty.medium;
-
+	
 	private static final int mGameRefreshRate=100;
 	private Timer mGameUpdater = new Timer(mGameRefreshRate,new Timer.TimerHandler() {
 		private boolean mFlashToggle=false;
@@ -121,6 +135,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	 */
 	
 	private static final int mTouchbackPos=20;
+	private static final int mKickoffPos=30;
 	private static final int mDownsPerSeries=4;
 	private static final int mYardsForFirstDown=10;
 	private static final int mStartingXPos=3;
@@ -134,18 +149,24 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	private int mSeriesDown;
 	private int mLineOfScrimmage;
 	private int mFirstDownPos;
+	private int mKickPower;
+	private Coordinate mBallPos;
 	
 	enum GameState
 	{
 		KICKOFF,
-		FREE_KICK,
+		PUNT,
+		KICK_RETURN,
 		DRIVE_IN_PROGRESS,
 		TURNOVER_ON_DOWNS,
 		INCOMPLETE,
 		INTERCEPTION,
 		FUMBLE,
 		TOUCHDOWN,
-		FIELD_GOAL,
+		TOUCHBACK,
+		FIELD_GOAL_ATTEMPT,
+		FIELD_GOAL_MAKE,
+		FIELD_GOAL_MISS,
 		SAFETY;
 		
 		public boolean isTurnover()
@@ -234,21 +255,24 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mFieldPosView = (TextView)findViewById(R.id.fieldpos_view);
 		mHomeScoreView = (TextView)findViewById(R.id.scoreboard_home);
 		mVisitorScoreView = (TextView)findViewById(R.id.scoreboard_visitor);
-				
-		mKickMeter= (ProgressBar)findViewById(R.id.kick_meter);
-		assert(mKickMeter.isIndeterminate() == false);
+		mKickMeter= (KickMeter)findViewById(R.id.kick_meter);
 		mInfoView = new TextViewAnimator((TextView)findViewById(R.id.info_view),
 											AnimationUtils.loadAnimation(this, R.anim.scroll_in),
 											AnimationUtils.loadAnimation(this, R.anim.scroll_out));
 		
+		
+		mSoundManager=new SoundManager(this);
+		
 		// Get the current settings values
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-		mQuiet=settings.getBoolean("sound", mQuiet);
+		mSoundManager.setMute(settings.getBoolean("sound", true) == false);
 		mPeriodLengthMins=Integer.parseInt(settings.getString("period_length", 
 											String.valueOf(mPeriodLengthMins)));
 		mDifficulty = Difficulty.valueOf(settings.getString("difficulty", mDifficulty.name()));
 		
 		settings.registerOnSharedPreferenceChangeListener(this);
+		
+		
 	}
 	
 	/* (non-Javadoc)
@@ -270,7 +294,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mFieldView.loadTile(VISITOR_LEFT, r.getDrawable(R.drawable.visitor_left));
 		mFieldView.loadTile(VISITOR_RIGHT, r.getDrawable(R.drawable.visitor_right));
 		mFieldView.loadTile(FOOTBALL, r.getDrawable(R.drawable.football));
-		
+				
 		if (savedInstanceState != null)
 		{
 			// We are being restored
@@ -288,6 +312,13 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 
 	
 	@Override
+	protected void onDestroy() 
+	{
+		mSoundManager.release();
+		super.onDestroy();
+	}
+
+	@Override
 	protected void onPause()
 	{
 		Log.i(TAG,"Activity Paused");
@@ -295,6 +326,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mGameClock.stop();
 		mAiUpdater.stop();
 		mGameUpdater.stop();
+		mSoundManager.pause();
 	}
 
 	
@@ -305,18 +337,24 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	protected void onResume() {
 		super.onResume();
 		Log.i(TAG,"Activity Resumed");
-		mGameUpdater.start();
-		updateDriveStatus();
+		mSoundManager.resume();
 		switch (mState)
 		{
+			case KICK:
+				mGameClock.start();
+				break;
 			case PLAY_LIVE:
 			case PASS:
 				mGameClock.start();
 				mAiUpdater.start();
-				return;
+				break;
 			default:
-				return;	
+				break;	
 		}
+		
+		updateDriveStatus();
+		updateScoreBoard();
+		mGameUpdater.start();
 	}
 	
 	@Override
@@ -330,25 +368,26 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		map.putInt("mHomeScore",mHomeScore);
 		map.putInt("mVisitorScore",mVisitorScore);
 		map.putBundle("mGameClock",mGameClock.serialize());
+		map.putBundle("mKickMeter",mKickMeter.serialize());
 		map.putInt("mPeriodLengthMins",mPeriodLengthMins);
 		map.putInt("mPeriod",mPeriod);
 		map.putInt("mLineOfScrimmage",mLineOfScrimmage);
 		map.putInt("mFieldPos",mFieldPos);
 		map.putInt("mSeriesDown",mSeriesDown);
 		map.putInt("mFirstDownPos",mFirstDownPos);
-
-		map.putBundle("offense", mOffense.serialize());
-		map.putBundle("defense", mDefense.serialize());
+		map.putInt("mKickPower",mKickPower);
+		map.putBundle("mBallPos", mBallPos.serialize());
+		map.putBundle("mOffense", mOffense.serialize());
+		map.putBundle("mDefense", mDefense.serialize());
 		
 		outState.putBundle(TAG, map);
 	}
-	
-	@Override
+
 	public void onSharedPreferenceChanged(SharedPreferences settings, String key)
 	{
 		if (key.equals("sound"))
 		{
-			mQuiet=settings.getBoolean("sound", mQuiet);
+			mSoundManager.setMute(settings.getBoolean("sound", true) == false);
 		}
 //		else if (key.equals("period_length"))
 //		{
@@ -362,7 +401,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		
 	}
 	
-
+	
 	/**
 	 * Restore game state if our process is being relaunched
 	 * 
@@ -378,16 +417,35 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mGameClock=new GameClock(savedState.getBundle("mGameClock"),
 				(TextView)findViewById(R.id.scoreboard_clock),
 				(TextView)findViewById(R.id.scoreboard_period));
+		mKickMeter.restore(savedState.getBundle("mKickMeter"));
 		mPeriod=savedState.getInt("mPeriod");
 		mPeriodLengthMins=savedState.getInt("mPeriodLengthMins");
 		mLineOfScrimmage=savedState.getInt("mLineOfScrimmage");
 		mFieldPos=savedState.getInt("mFieldPos");
 		mSeriesDown=savedState.getInt("mSeriesDown");
 		mFirstDownPos=savedState.getInt("mFirstDownPos");
-		mOffense=new Offense(savedState.getBundle("offense"));
-		mDefense=new Defense(savedState.getBundle("defense"));
+		mKickPower=savedState.getInt("mKickPower");
+		mBallPos=new Coordinate(savedState.getBundle("mBallPos"));
+		mOffense=new Offense(savedState.getBundle("mOffense"));
+		mDefense=new Defense(savedState.getBundle("mDefense"));
+		initAudio();
 	}
 	
+	private void initAudio()
+	{
+		mSoundManager.addSfx(AUDIO_CROWD, R.raw.crowd);
+		mSoundManager.addSfx(AUDIO_CROWD_BOO, R.raw.crowd_boo);
+		mSoundManager.addSfx(AUDIO_CROWD_CHEER, R.raw.crowd_cheer);
+		mSoundManager.addSfx(AUDIO_QUARTERBACK, R.raw.quarterback);
+		mSoundManager.addSfx(AUDIO_TACKLE, R.raw.tackle);
+		mSoundManager.addSfx(AUDIO_WHISTLE, R.raw.whistle);
+		mSoundManager.addSfx(AUDIO_KICK, R.raw.kick);
+		mSoundManager.addSfx(AUDIO_CATCH, R.raw.ball_catch);
+		mSoundManager.addSfx(AUDIO_TOUCHDOWN,R.raw.touchdown);
+		
+		mSoundManager.setSfxVolume(AUDIO_CROWD, 0.1f);
+		mSoundManager.playSfx(AUDIO_CROWD,true);
+	}
 	
 	/**
 	 * Returns the number of tiles long (between the end zones) the playing field is
@@ -409,12 +467,14 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	{
 		mOffense = new Offense(Team.SIDE_HOME,Team.ORIENTATION_LEFT);
 		mDefense = new Defense(Team.SIDE_VISITOR,Team.ORIENTATION_RIGHT);
+		mBallPos = new Coordinate(mOffense.quarterback().pos());
 		mGameClock = new GameClock(mPeriodLengthMins,
 				(TextView)findViewById(R.id.scoreboard_clock),
 				(TextView)findViewById(R.id.scoreboard_period));
 		mHomeScore=0;
 		mVisitorScore=0;
 		mGameState=GameState.KICKOFF;
+		initAudio();		
 		mGameUpdater.start();
 		initPreSnap();
 	}
@@ -422,46 +482,75 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 
 	private void initPreSnap()
 	{
+		
 		handleNewPeriod();	
 		
 		mLineOfScrimmage=mFieldPos;
+		mInfoView.clearText();
+		
+		
 		switch (mGameState)
 		{
 			case KICKOFF:
-				handleKickoff();
+				mState=State.PRE_KICKOFF;
+				mFieldPos=(mOffense.orientation() == Team.ORIENTATION_RIGHT)?mKickoffPos:100-mKickoffPos;
+				arrangePreSnapFormation(mOffense);
+				arrangePreSnapFormation(mDefense);
+				mInfoView.setText(getString(R.string.info_kickoff),mInfoDuration);
+				updateDriveStatus();
+				mKickMeter.setMinMax(20,75);
+				mKickMeter.enable();
+				return;
+			case TOUCHBACK:
+				handleTouchBack();
 				break;
+			case FIELD_GOAL_MISS:
 			case TURNOVER_ON_DOWNS:
 			case INTERCEPTION:
 			case FUMBLE:
 				handleChangeOfPossesion();
 				break;
+				
 		}
 		
+		mState=State.PRE_SNAP;
 		arrangePreSnapFormation(mOffense);
 		arrangePreSnapFormation(mDefense);
-		mState=State.PRE_SNAP;
-		mInfoView.clearText();
+		mSoundManager.playSfx(AUDIO_QUARTERBACK,true);
 		updateScoreBoard();
 		updateDriveStatus();
 	}
 	
+	
 	private void arrangePreSnapFormation(Team team)
 	{
-		int[][] preSnapFormation= team.getPreSnapFormation();
+		int[][] formation;
+		switch (mGameState)
+		{
+			case KICKOFF: 
+				formation = team.getKickoffFormation();
+				break;
+				
+			default:
+			case DRIVE_IN_PROGRESS: 
+				formation = team.getPreSnapFormation();
+				break;
+		}
+		
 		for ( int idx=0;idx<team.size();idx++)
 		{
 			Player player = team.getPlayer(idx);
 			player.setFlashing(false);
-			if (preSnapFormation[idx][0] == -1 && preSnapFormation[idx][1] == -1)
+			if (formation[idx][0] == -1 || formation[idx][1] == -1)
 			{
 				player.set(-1,-1);
 			}
 			else
 			{		
 				if (team.orientation()==Team.ORIENTATION_RIGHT)
-					player.set(preSnapFormation[idx][0],preSnapFormation[idx][1]);
+					player.set(formation[idx][0],formation[idx][1]);
 				else
-					player.set(getFieldLength()-1-preSnapFormation[idx][0],preSnapFormation[idx][1]);
+					player.set(getFieldLength()-1-formation[idx][0],formation[idx][1]);
 			}
 		}
 	}
@@ -510,6 +599,17 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mDefense.setSide(tmp);
 	}
 	
+	private void handleTouchBack()
+	{
+		swapSides();
+		swapOrientation();
+		mFieldPos=(mOffense.orientation() == Team.ORIENTATION_RIGHT)?mTouchbackPos:100-mTouchbackPos;
+		mLineOfScrimmage=mFieldPos;
+		mSeriesDown = 1;
+		setFirstDownPos();
+		mGameState=GameState.DRIVE_IN_PROGRESS;
+	}
+	
 	private void handleNewPeriod()
 	{
 		if (mGameClock.expired())
@@ -533,7 +633,6 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 					mDefense.setOrientation(Team.ORIENTATION_RIGHT);
 					mGameState=GameState.KICKOFF;
 					mGameClock.set_period();
-					mInfoView.setText(getString(R.string.info_kickoff),mInfoDuration);
 					break;
 				case GAME_OVER:
 					return;
@@ -566,9 +665,30 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 			
 		switch (mGameState)
 		{
+			case KICK_RETURN:
+				mSoundManager.playSfx(AUDIO_TACKLE,false);
+				handleFirstDown();
+				mGameState=GameState.DRIVE_IN_PROGRESS;
+				break;
+				
+			case TOUCHBACK:
+				mInfoView.setText(getString(R.string.info_touchback),mInfoDuration);
+				break;
+				
 			case TOUCHDOWN:
-				mInfoView.setText(getString(R.string.info_touchdown),mInfoDuration);
+				mSoundManager.playSfx(AUDIO_TOUCHDOWN,false);
+				mInfoView.setText(getString(R.string.info_touchdown));
 				mGameState=GameState.KICKOFF;
+				break;
+				
+			case FIELD_GOAL_MAKE:
+				mInfoView.setText(getString(R.string.info_field_goal_make));
+				mGameState=GameState.KICKOFF;
+				break;
+				
+			case FIELD_GOAL_MISS:
+				mFieldPos=mLineOfScrimmage;
+				mInfoView.setText(getString(R.string.info_field_goal_miss));
 				break;
 				
 			case INTERCEPTION:
@@ -577,9 +697,17 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				
 			case INCOMPLETE:
 				mInfoView.setText(getString(R.string.info_incomplete),mInfoDuration);
-				mGameState=GameState.DRIVE_IN_PROGRESS;
 				
 			case DRIVE_IN_PROGRESS:
+				if (mGameState==GameState.DRIVE_IN_PROGRESS)
+				{
+					mSoundManager.playSfx(AUDIO_TACKLE,false);
+				}
+				else
+				{
+					mGameState=GameState.DRIVE_IN_PROGRESS;
+				}
+				
 				if (checkFirstDown())
 				{
 					handleFirstDown();
@@ -611,38 +739,106 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				break;
 		}
 		
+		try {Thread.sleep(200);} 
+			catch (InterruptedException e) {}
+		
+		mSoundManager.playSfx(AUDIO_WHISTLE,false);
 		switch (mGameClock.period())
 		{
 			case END_OF_FIRST_QUARTER:
 				mInfoView.setText(getString(R.string.info_end_of_first_quarter),mInfoDuration);
 				break;
 			case HALFTIME:
-				mInfoView.setText(getString(R.string.info_halftime));
+				mInfoView.setText(getString(R.string.info_halftime),mInfoDuration);
 				break;
 			case END_OF_THIRD_QUARTER:
 				mInfoView.setText(getString(R.string.info_end_of_third_quarter),mInfoDuration);
 				break;
 			case GAME_OVER:
+				mState = State.GAME_OVER;
 				mInfoView.setText(getString(R.string.info_game_over));
+				mSoundManager.release();
 				mGameUpdater.stop();
 				break;
 		}
 	}
 	
-	private void handleTouchBack()
+
+	private void handleKickReception()
 	{
-		mFieldPos=(mOffense.orientation() == Team.ORIENTATION_RIGHT)?mTouchbackPos:100-mTouchbackPos;
-		mLineOfScrimmage=mFieldPos;
-		mSeriesDown = 1;
-		setFirstDownPos();
-	}
-	
-	private void handleKickoff()
-	{
+		mSoundManager.playSfx(AUDIO_CATCH,false);
 		swapSides();
 		swapOrientation();
-		handleTouchBack();
-		mGameState=GameState.DRIVE_IN_PROGRESS;
+		mGameState=GameState.KICK_RETURN;
+		mState=State.PLAY_LIVE;
+		
+		for (PlayerIterator i=mOffense.iterator();i.hasNext();)
+			i.next().set(-1,-1);
+		
+		for (PlayerIterator i=mDefense.iterator();i.hasNext();)
+			i.next().set(-1,-1);
+		
+		mOffense.quarterback().set(mBallPos.x,mBallPos.y);	
+		mAiUpdater.start();
+	}
+	
+	private void onHandleKick()
+	{
+		int newX;
+		boolean inEndZone=false;
+		
+		if (mOffense.orientation() == Team.ORIENTATION_RIGHT)
+		{
+			newX = mBallPos.x+1;
+			if (newX >= getFieldLength())
+				newX=0;		
+			
+			mFieldPos++;
+			inEndZone = mFieldPos >= 100;
+		}
+		else
+		{
+			newX = mBallPos.x-1;
+			if (newX < 0)
+				newX=getFieldLength()-1;	
+			
+			mFieldPos--;
+			inEndZone = mFieldPos <= 0;
+		}
+		
+		if (inEndZone)
+		{
+			switch (mGameState)
+			{
+				case FIELD_GOAL_ATTEMPT:
+					handleFieldGoal();
+					return;
+				case PUNT:
+				case KICKOFF:
+				default:
+					mGameState=GameState.TOUCHBACK;
+					handlePlayDead();
+					return;
+			}
+		}
+		
+		if (--mKickPower  == 0)
+		{
+			switch (mGameState)
+			{
+				case FIELD_GOAL_ATTEMPT:
+					mGameState=GameState.FIELD_GOAL_MISS;
+					handlePlayDead();
+					return;
+				case PUNT:
+				case KICKOFF:
+				default:
+					handleKickReception();
+					return;
+			}
+		}
+
+		mBallPos.x=newX;
 	}
 	
 	private void handleTouchDown()
@@ -650,34 +846,92 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		if (mOffense.side() == Team.SIDE_HOME)
 		{
 			mHomeScore+=7;
+			mSoundManager.playSfx(AUDIO_CROWD_CHEER, false);
 		}
 		else
 		{
 			mVisitorScore+=7;
+			mSoundManager.playSfx(AUDIO_CROWD_BOO, false);
 		}
 		
 		mGameState=GameState.TOUCHDOWN;
 		updateScoreBoard();
 		handlePlayDead();
 	}
+	private void handleFieldGoal()
+	{
+		Log.i(TAG,String.format("Field Goal percentage %d%%",mDifficulty.perFieldGoalIsGood().getPercentage()+mKickPower));
+		if (mDifficulty.perFieldGoalIsGood().test(mKickPower))
+		{
+			Log.i(TAG,"Field goal is good");
+			if (mOffense.side() == Team.SIDE_HOME)
+			{
+				mHomeScore+=3;
+				mSoundManager.playSfx(AUDIO_CROWD_CHEER, false);
+			}
+			else
+			{
+				mVisitorScore+=3;
+				mSoundManager.playSfx(AUDIO_CROWD_BOO, false);
+			}
+			
+			mGameState=GameState.FIELD_GOAL_MAKE;
+			updateScoreBoard();
+		}
+		else
+		{
+			Log.i(TAG,"Field goal miss");
+			mGameState=GameState.FIELD_GOAL_MISS;
+		}
+		
+		handlePlayDead();
+	}
 	
 	private Random recRand=new Random();
 	private void handleSnap()
 	{
+		if (mKickMeter.isEnabled())
+			return;
+		
+		mSoundManager.stopSfx(AUDIO_QUARTERBACK);
 		mInfoView.clearText();
 		mState = State.PLAY_LIVE;
 		mGameClock.start();
 		mOffense.receiver().set((mOffense.orientation() == Team.ORIENTATION_RIGHT)?
-								mOffense.quarterback().x+2:
-									mOffense.quarterback().x-2, recRand.nextInt(3));
+								mOffense.quarterback().pos().x+2:
+									mOffense.quarterback().pos().x-2, recRand.nextInt(3));
 		mAiUpdater.start();
+	}
+	
+	private boolean ballAcrossLineOfScrimmage()
+	{
+		if (mOffense.orientation() == Team.ORIENTATION_RIGHT)
+		{
+			return (mFieldPos > mLineOfScrimmage);
+		}
+		else
+		{
+			return (mFieldPos < mLineOfScrimmage);
+		}
+	}
+	
+	private boolean ballInEndZone()
+	{
+		if (mOffense.orientation() == Team.ORIENTATION_RIGHT)
+		{
+			return (mFieldPos >= 100);
+		}
+		else
+		{
+			return (mFieldPos <= 0);
+		}
 	}
 	
 	private void moveBallCarrierLeft()
 	{
-		int newX=mOffense.quarterback().x;
+		int newX=mOffense.quarterback().pos().x;
 		
-		if (mOffense.quarterback().x > 0)
+		if (mOffense.quarterback().pos().x > 0)
 		{
 			newX-=1;
 		}
@@ -688,23 +942,17 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		else
 			return;
 		
-		DefensivePlayer tackler = (DefensivePlayer)mDefense.findPlayer(newX,mOffense.quarterback().y);
+		DefensivePlayer tackler = (DefensivePlayer)mDefense.findPlayer(newX,mOffense.quarterback().pos().y);
 		if (tackler == null)
 		{
-			mOffense.quarterback().x=newX;
+			mOffense.quarterback().pos().x=newX;
 			mFieldPos-=1;
-			if (mOffense.orientation() == Team.ORIENTATION_LEFT)
-			{
-				if (mFieldPos < mLineOfScrimmage)
-				{
-					mOffense.receiver().set(-1,-1);
-				}
+			if (ballAcrossLineOfScrimmage())
+				mOffense.receiver().set(-1,-1);
+						
+			if (ballInEndZone())
+				handleTouchDown();
 				
-				if (mFieldPos <= 0)
-				{
-					handleTouchDown();
-				}
-			}
 		}
 		else
 		{
@@ -715,6 +963,9 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	}
 	public void onLeft(View view)
 	{
+		if (mKickMeter.isEnabled())
+			return;
+		
 		switch (mState)
 		{
 			case PRE_SNAP:
@@ -732,9 +983,9 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 
 	private void moveBallCarrierRight()
 	{
-		int newX=mOffense.quarterback().x;
+		int newX=mOffense.quarterback().pos().x;
 		
-		if (mOffense.quarterback().x < getFieldLength()-1)
+		if (mOffense.quarterback().pos().x < getFieldLength()-1)
 		{
 			newX+=1;
 		}
@@ -745,23 +996,16 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		else
 			return;
 		
-		DefensivePlayer tackler = (DefensivePlayer)mDefense.findPlayer(newX,mOffense.quarterback().y);
+		DefensivePlayer tackler = (DefensivePlayer)mDefense.findPlayer(newX,mOffense.quarterback().pos().y);
 		if (tackler == null)
 		{
-			mOffense.quarterback().x=newX;
+			mOffense.quarterback().pos().x=newX;
 			mFieldPos+=1;
-			if (mOffense.orientation() == Team.ORIENTATION_RIGHT)
-			{
-				if (mFieldPos > mLineOfScrimmage)
-				{
-					mOffense.receiver().set(-1,-1);
-				}
-				
-				if (mFieldPos >= 100)
-				{
-					handleTouchDown();
-				}
-			}
+			if (ballAcrossLineOfScrimmage())
+				mOffense.receiver().set(-1,-1);
+						
+			if (ballInEndZone())
+				handleTouchDown();
 		}
 		else
 		{
@@ -773,6 +1017,9 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	
 	public void onRight(View view)
 	{	
+		if (mKickMeter.isEnabled())
+			return;
+		
 		switch (mState)
 		{
 			case PRE_SNAP:
@@ -789,19 +1036,19 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 
 	private void moveBallCarrierUp()
 	{
-		int newY=mOffense.quarterback().y;
+		int newY=mOffense.quarterback().pos().y;
 		
-		if (mOffense.quarterback().y > 0)
+		if (mOffense.quarterback().pos().y > 0)
 		{
 			newY -= 1;
 		}
 		else
 			return;
 		
-		DefensivePlayer tackler = (DefensivePlayer)mDefense.findPlayer(mOffense.quarterback().x,newY);
+		DefensivePlayer tackler = (DefensivePlayer)mDefense.findPlayer(mOffense.quarterback().pos().x,newY);
 		if (tackler == null)
 		{
-			mOffense.quarterback().y=newY;
+			mOffense.quarterback().pos().y=newY;
 		}
 		else
 		{
@@ -813,6 +1060,9 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	
 	public void onUp(View view)
 	{	
+		if (mKickMeter.isEnabled())
+			return;
+		
 		switch (mState)
 		{
 			case PLAY_LIVE:
@@ -825,19 +1075,19 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 
 	private void moveBallCarrierDown()
 	{
-		int newY=mOffense.quarterback().y;
+		int newY=mOffense.quarterback().pos().y;
 		
-		if (mOffense.quarterback().y < mFieldView.getFieldWidth() - 1)
+		if (mOffense.quarterback().pos().y < mFieldView.getFieldWidth() - 1)
 		{
 			newY += 1;
 		}
 		else
 			return;
 		
-		DefensivePlayer tackler = (DefensivePlayer)mDefense.findPlayer(mOffense.quarterback().x,newY);
+		DefensivePlayer tackler = (DefensivePlayer)mDefense.findPlayer(mOffense.quarterback().pos().x,newY);
 		if (tackler == null)
 		{
-			mOffense.quarterback().y=newY;
+			mOffense.quarterback().pos().y=newY;
 		}
 		else
 		{
@@ -849,6 +1099,9 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	
 	public void onDown(View view)
 	{	
+		if (mKickMeter.isEnabled())
+			return;
+		
 		switch (mState)
 		{
 			case PLAY_LIVE:
@@ -859,14 +1112,16 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		}
 	}
 	
-	private int passX;
 	public void onPass(View view)
 	{	
+		if (mKickMeter.isEnabled())
+			return;
+		
 		switch (mState)
 		{
 			case PLAY_LIVE:
 				mState=State.PASS;	
-				passX=mOffense.quarterback().x;
+				mBallPos=new Coordinate(mOffense.quarterback().pos());
 				break;
 			default:
 				return;
@@ -875,6 +1130,9 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	
 	public void onHuddle(View view)
 	{	
+		if (mKickMeter.isEnabled())
+			return;
+		
 		switch (mState)
 		{
 			case PLAY_DEAD:
@@ -887,6 +1145,45 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	
 	public void onKick(View view)
 	{	
+		if (mKickMeter.isEnabled())
+		{
+			mKickPower=mKickMeter.getPowerValue();
+			Log.i(TAG,String.format("KickMeter kick power = %d",mKickPower));
+			mKickMeter.disable();
+			mBallPos=new Coordinate(mOffense.quarterback().pos());
+			mSoundManager.playSfx(AUDIO_KICK,false);
+			mInfoView.clearText();
+			mState = State.KICK;
+			mGameClock.start();
+		}
+		else
+		{
+			switch (mState)
+			{
+				case PRE_SNAP:
+					mSoundManager.stopSfx(AUDIO_QUARTERBACK);
+					mInfoView.clearText();
+					mKickMeter.setMinMax(5,50);
+					mGameState = GameState.FIELD_GOAL_ATTEMPT;
+					mKickMeter.enable();
+					mAiUpdater.stop();
+					mGameClock.stop();
+					break;
+					
+				case PLAY_LIVE:
+					// Punt
+					if (ballAcrossLineOfScrimmage() == false)
+					{
+						mInfoView.clearText();
+						mKickMeter.setMinMax(10,60);
+						mKickMeter.enable();
+						mGameState = GameState.PUNT;
+						mAiUpdater.stop();
+						mGameClock.stop();
+					}
+					break;
+			}
+		}
 	}
 	
 	private Player findPlayer(int x, int y)
@@ -903,8 +1200,9 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		Player quarterback = mOffense.quarterback();
 		Player receiver = mOffense.receiver();
 		
-		mFieldPos+=(receiver.x - quarterback.x);
-		quarterback.set(receiver.x,receiver.y);
+		mSoundManager.playSfx(AUDIO_CATCH,false);
+		mFieldPos+=(receiver.pos().x - quarterback.pos().x);
+		quarterback.set(receiver.pos().x,receiver.pos().y);
 		receiver.set(-1,-1);
 		mState=State.PLAY_LIVE;	
 		
@@ -926,17 +1224,17 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	
 	private void handleInterception(Player defender)
 	{
-		mFieldPos+=(defender.x - mOffense.quarterback().x);
+		mFieldPos+=(defender.pos().x - mOffense.quarterback().pos().x);
 		defender.setFlashing(true);
 		mGameState=GameState.INTERCEPTION;
 		handlePlayDead();
 	} 
 	
-	private void handlePass()
+	private void onHandlePass()
 	{
 		Player quarterback = mOffense.quarterback();
 		Player receiver = mOffense.receiver();
-		int newX = (mOffense.orientation() == Team.ORIENTATION_RIGHT)?passX+1:passX-1;
+		int newX = (mOffense.orientation() == Team.ORIENTATION_RIGHT)?mBallPos.x+1:mBallPos.x-1;
 		
 		// Check for incomplete pass
 		if (newX < 0 || newX >= getFieldLength())
@@ -947,28 +1245,28 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 			return;
 		}
 		
-		Player defender = mDefense.findPlayer(newX,quarterback.y);
+		Player defender = mDefense.findPlayer(newX,quarterback.pos().y);
 		if (defender != null)
 		{
 			if (mOffense.orientation() == Team.ORIENTATION_RIGHT)
 			{
-				if (defender.x >= mStartingXPos)
+				if (defender.pos().x >= mStartingXPos)
 					handleInterception(defender);
 			}
 			else 
 			{
-				if (defender.x <= getFieldLength()-1-mStartingXPos)
+				if (defender.pos().x <= getFieldLength()-1-mStartingXPos)
 					handleInterception(defender);
 			}
 		}
 		
-		if (receiver.equals(newX,quarterback.y))
+		if (receiver.equals(newX,quarterback.pos().y))
 		{
 			handleCompletion();
 			return;
 		}
 
-		passX=newX;	
+		mBallPos.x=newX;	
 	}
 	
 	protected boolean OnUpdateGameAI()
@@ -980,8 +1278,10 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				Game.this.OnMoveReceiver(); 
 				return (mState==State.PLAY_LIVE);
 			case PASS:
-				handlePass();
 				return true;
+			case KICK:
+				return true;
+
 			default:
 				return false;
 		}
@@ -990,13 +1290,13 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	protected void OnMoveReceiver()
 	{
 		if ( !mDifficulty.perReceiverMoves().test() || 
-				mOffense.receiver().x == -1 ||
-					mOffense.receiver().y == -1)
+				mOffense.receiver().pos().x == -1 ||
+					mOffense.receiver().pos().y == -1)
 			return;
 		
 		movePlayerRelativePosition(mOffense.receiver(),
 										(mOffense.orientation() == Team.ORIENTATION_RIGHT)?getFieldLength()-1:0,
-										mOffense.quarterback().y);	
+										mOffense.quarterback().pos().y);	
 	}
 
 	
@@ -1006,22 +1306,30 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		for (PlayerIterator i=mDefense.iterator();i.hasNext();)
 		{
 			DefensivePlayer defender = (DefensivePlayer)i.next();
-			// Look for a defender that can make the tackle. Based on the difficulty
-			//  setting, there is a percentage chance that the player will make the
-			//  tackle. The more players surrounding the ball carrier, the better
-			//  the chance
-			if ((Math.abs(defender.x-ballCarrier.x) + 
-			      Math.abs(defender.y-ballCarrier.y)) == 1)
+			// If the defender is not visible, make them visible first, this 
+			// happens on kick returns
+			if(defender.isVisibile())
 			{
-				if (mDifficulty.perDefenderTackles().test())
-					return defender;
+				// Look for a defender that can make the tackle. Based on the difficulty
+				//  setting, there is a percentage chance that the player will make the
+				//  tackle. The more players surrounding the ball carrier, the better
+				//  the chance
+				if ((Math.abs(defender.pos().x-ballCarrier.pos().x) + 
+				      Math.abs(defender.pos().y-ballCarrier.pos().y)) == 1)
+				{
+					if (mDifficulty.perDefenderTackles().test())
+						return defender;
+				}
 			}
+			else
+				return defender;
+
 		}
 		
 		return (DefensivePlayer)mDefense.getRandomPlayer();
 	}
 	
-	private Random bRand=new Random();
+	
 	protected void OnMoveDefense() 
 	{
 		if ( ! mDifficulty.perDefenderMoves().test())
@@ -1033,10 +1341,9 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		DefensivePlayer defender = selectDefenderToMove();
 		OffensivePlayer ballCarrier=mOffense.quarterback();
 
-
 		// Make the tackle if possible
-	    if ((Math.abs(defender.x-ballCarrier.x) + 
-			      Math.abs(defender.y-ballCarrier.y)) == 1)
+	    if ((Math.abs(defender.pos().x-ballCarrier.pos().x) + 
+			      Math.abs(defender.pos().y-ballCarrier.pos().y)) == 1)
 		{
 	    	defender.setFlashing(true);
 	    	ballCarrier.setFlashing(true);
@@ -1044,32 +1351,50 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	    	return;
 		}
 		
-	    movePlayerRelativePlayer(defender,ballCarrier);
+	    if (defender.isVisibile())
+	    {
+	    	movePlayerRelativePlayer(defender,ballCarrier);
+	    }
+	    else
+	    {
+	    	int y = bRand.nextInt(getFieldWidth());
+	    	int x = bRand.nextInt(getFieldLength());
+	    	
+	    	while ( (mOffense.findPlayer(x,y)!=null) && (mDefense.findPlayer(x,y)!=null) )
+	    	{
+	    		Log.d(TAG,String.format("OnMoveDefense, pos make visible occupied at %d %d",x,y));
+	    		y = bRand.nextInt(getFieldWidth());
+		    	x = bRand.nextInt(getFieldLength());
+	    	}
+	    	Log.d(TAG,String.format("OnMoveDefense, defender now visible at %d %d",x,y));
+	    	defender.set(x,y);
+	    }
 	}
 
 	protected void movePlayerRelativePlayer(Player player,Player other)
 	{
-		movePlayerRelativePosition(player,other.x,other.y);
+		movePlayerRelativePosition(player,other.pos().x,other.pos().y);
 	}
 	
+	private Random bRand=new Random();
 	protected void movePlayerRelativePosition(Player player,int x, int y)
 	{
-		int xOffset= player.x-x;
-	    int yOffset= player.y-y;
+		int xOffset= player.pos().x-x;
+	    int yOffset= player.pos().y-y;
 	    
-	    int newX=( (xOffset== 0) ? player.x :
-	    			( (xOffset < 0) ? player.x+1: player.x-1) );
+	    int newX=( (xOffset== 0) ? player.pos().x :
+	    			( (xOffset < 0) ? player.pos().x+1: player.pos().x-1) );
 	    	    
-		int newY=( (yOffset== 0) ? player.y :
-					( (yOffset < 0) ? player.y+1:player.y-1) );
+		int newY=( (yOffset== 0) ? player.pos().y :
+					( (yOffset < 0) ? player.pos().y+1:player.pos().y-1) );
 				
 		// If we can't make the tackle pick a direction to try moving first.
 		//  we will try both directions before giving up
 		boolean selector = bRand.nextBoolean();
 		for (int i=0;i<2;i++)
 		{
-			int dx=selector?newX:player.x;
-			int dy=selector?player.y:newY;
+			int dx=selector?newX:player.pos().x;
+			int dy=selector?player.pos().y:newY;
 			
 			if (player.equals(dx,dy))
 				continue;
@@ -1151,7 +1476,20 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	
 	private void updateDriveStatus()
 	{
-		mDriveView.setText(driveStatusToString());
+		switch (mGameState)
+		{
+			case KICKOFF:
+				mDriveView.setText(getString(R.string.info_kickoff));
+				break;
+			case PUNT:
+				mDriveView.setText(getString(R.string.info_punt));
+				break;
+			case FIELD_GOAL_ATTEMPT:
+				mDriveView.setText(getString(R.string.info_field_goal));
+				break;
+			default:
+				mDriveView.setText(driveStatusToString());
+		}
 		mFieldPosView.setText(fieldPosToString());
 	}
 
@@ -1159,6 +1497,16 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	private void updateGame(boolean flash)
 	{
 		mGameClock.tick();
+		switch (mState)
+		{
+			case KICK:
+				onHandleKick();
+				break;
+			case PASS:
+				onHandlePass();
+				break;
+		}
+			
 		updateField(flash);
 	}
 	
@@ -1167,7 +1515,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		try
 		{
 			if ( !player.isFlashing() || flash )
-				mFieldView.setTile(bitmapIdx, player.x, player.y);
+				mFieldView.setTile(bitmapIdx, player.pos().x, player.pos().y);
 		}
 		catch (NullPointerException e)
 		{
@@ -1192,15 +1540,42 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	{
 		switch (mState)
 		{
-			case PLAY_LIVE:
 			case PLAY_DEAD:
+				switch (mGameState)
+				{
+					case KICKOFF:
+					case FIELD_GOAL_MAKE:
+					case FIELD_GOAL_MISS:
+					case TOUCHBACK:
+						mFieldView.clearTiles();
+						break;
+					default:
+						updatePlayerTiles(flash);
+							
+				}
+				break;
+			case PLAY_LIVE:
 			case PRE_SNAP:
 				updatePlayerTiles(flash);
 				break;
 				
 			case PASS:
 				updatePlayerTiles(flash);
-				mFieldView.setTile(FOOTBALL,passX,mOffense.quarterback().y);
+				mFieldView.setTile(FOOTBALL,mBallPos.x,mBallPos.y);
+				break;
+				
+			case PRE_KICKOFF:
+				updatePlayerTiles(flash);
+				mFieldView.setTile(FOOTBALL,mOffense.quarterback().pos().x +
+						((mOffense.orientation() == Team.ORIENTATION_RIGHT)?1:-1),mOffense.quarterback().pos().y);
+				
+				// animate the kick meter
+				break;
+				
+			case KICK:
+				mFieldView.clearTiles();
+				mFieldView.setTile(FOOTBALL,mBallPos.x,mBallPos.y);
+				updateDriveStatus();
 				break;
 				
 			default:

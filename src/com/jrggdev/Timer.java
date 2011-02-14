@@ -8,6 +8,8 @@ public class Timer extends Handler
 	private boolean mRunning=false;
 	private int mIntervalMillis=0;
 	private TimerHandler mHandler;
+	private static int GLOBAL_MESSAGE_ID=0;
+	private int mMessageId;
 	
 	public interface TimerHandler
 	{
@@ -16,13 +18,13 @@ public class Timer extends Handler
 	
 	public Timer(TimerHandler handler)
 	{
-		
+		mMessageId=GLOBAL_MESSAGE_ID++;
 		mHandler=handler;
 	}
 	
 	public Timer(int intervalMillis, TimerHandler handler)
 	{
-		
+		mMessageId=GLOBAL_MESSAGE_ID++;
 		mHandler=handler;
 		mIntervalMillis=intervalMillis;
 	}
@@ -30,7 +32,7 @@ public class Timer extends Handler
 	@Override
 	public void handleMessage(Message msg)
 	{
-		if (mRunning)
+		if ( (msg.what == mMessageId) && mRunning)
 		{
 			mRunning=false;
 			if ( mHandler.HandleTimer())
@@ -50,8 +52,8 @@ public class Timer extends Handler
 	public void start()
 	{
 		mRunning=true;
-		removeMessages(0);
-		sendMessageDelayed(obtainMessage(0), mIntervalMillis);
+		removeMessages(mMessageId);
+		sendMessageDelayed(obtainMessage(mMessageId), mIntervalMillis);
 	}
 	
 	public void stop()

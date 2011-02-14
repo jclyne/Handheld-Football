@@ -5,11 +5,12 @@ import java.util.NoSuchElementException;
 
 import android.os.Bundle;
 
+import com.jrggdev.Coordinate;
+
+
 abstract class Player
 {
-	public int x;
-	public int y;
-
+	private Coordinate mPos;
 	private boolean mFlashing=false;
 	private Team mTeam;
 	
@@ -21,44 +22,50 @@ abstract class Player
 	
 	public Player(Team team)
 	{
-		x = -1;
-		y = -1;
+		mPos=new Coordinate(-1,-1);
 		mTeam=team;
 	}
 	
 	public Player(Team team, int newX, int newY)
 	{
-		x = newX;
-		y = newY;
+		mPos=new Coordinate(newX,newY);
 		mTeam=team;
 	}
 	
 	public Player(Team team,Bundle bundle)
 	{
-		x = bundle.getInt("xpos");
-		y = bundle.getInt("ypos");
+		mPos=new Coordinate(bundle.getInt("xpos"),bundle.getInt("ypos"));
 		mFlashing=bundle.getBoolean("mFlashing");
 		mTeam=team;
 	}
 	
 	public Player(Player copy)
 	{
-		x = copy.x;
-		y = copy.y;
+		mPos=new Coordinate(copy.pos());
 		mFlashing=copy.mFlashing;
 	}
 
+	boolean isVisibile()
+	{
+		return ( mPos.x >= 0 && mPos.y >= 0);
+	}
+	
+	public Coordinate pos() 
+	{
+		return mPos;
+	}
+	
 	@Override
 	public String toString()
 	{
-		return "Player: [" + x + "," + y + "]";
+		return mPos.toString();
 	}
 	
 	public boolean equals(Player other)
 	{
 		try 
 		{
-			return equals(other.x,other.y);
+			return equals(other.mPos.x,other.mPos.y);
 		} 
 		catch (NullPointerException e) 
 		{
@@ -68,7 +75,7 @@ abstract class Player
 	
 	public boolean equals(int x, int y)
 	{
-		return (x == this.x && y == this.y);
+		return mPos.equals(x,y);
 	}
 
 	public final boolean isFlashing() { return mFlashing; }
@@ -78,15 +85,15 @@ abstract class Player
 	
 	public void set(int newX, int newY)
 	{		
-		x = newX;
-		y = newY;
+		mPos.x = newX;
+		mPos.y = newY;
 	}
 	
 	public Bundle serialize()
 	{
 		Bundle bundle = new Bundle();
-		bundle.putInt("xpos", x);
-		bundle.putInt("ypos", y);
+		bundle.putInt("xpos", mPos.x);
+		bundle.putInt("ypos", mPos.y);
 		bundle.putBoolean("mFlashing", mFlashing);
 		
 		return bundle;

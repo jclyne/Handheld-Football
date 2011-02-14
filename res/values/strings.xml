@@ -28,8 +28,12 @@
 	<string name="scoreboard_field_pos">FIELD POSITION</string>
 	<string name="info_change_sides">Change Sides</string>
 	<string name="info_kickoff">Kickoff</string>
-	
+	<string name="info_punt">Punt</string>
+	<string name="info_field_goal">Field Goal</string>
+	<string name="info_field_goal_miss">No Good</string>
+	<string name="info_field_goal_make">Its Good!</string>
 	<string name="info_touchdown">TOUCHDOWN!</string>
+	<string name="info_touchback">Touchback</string>
 	<string name="info_interception">Interception</string>
 	<string name="info_incomplete">Incomplete</string>
 	<string name="info_first_down">1st Down</string>
@@ -66,7 +70,7 @@
 		<item>8</item>
 		<item>10</item>
 	</string-array>	
-	<string name="setting_period_length_default_value">2</string>
+	<string name="setting_period_length_default_value">4</string>
 	<string name="setting_period_length_dialog_title">Select a period length</string>
 	
 	<string name="setting_difficulty">Difficulty</string>
