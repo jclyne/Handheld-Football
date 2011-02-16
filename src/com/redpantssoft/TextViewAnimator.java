@@ -1,4 +1,4 @@
-package com.jrggdev;
+package com.redpantssoft;
 
 import java.util.LinkedList;
 import java.util.Queue;

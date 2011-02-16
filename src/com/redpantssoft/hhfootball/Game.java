@@ -1,4 +1,4 @@
-package com.jrggdev.hhfootball;
+package com.redpantssoft.hhfootball;
 
 import java.util.Random;
 
@@ -17,12 +17,12 @@ import android.view.View;
 import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
-import com.jrggdev.Coordinate;
-import com.jrggdev.Percentage;
-import com.jrggdev.SoundManager;
-import com.jrggdev.TextViewAnimator;
-import com.jrggdev.Timer;
-import com.jrggdev.hhfootball.GameClock.Period;
+import com.redpantssoft.Coordinate;
+import com.redpantssoft.Percentage;
+import com.redpantssoft.SoundManager;
+import com.redpantssoft.TextViewAnimator;
+import com.redpantssoft.Timer;
+import com.redpantssoft.hhfootball.GameClock.Period;
 
 
 /**
