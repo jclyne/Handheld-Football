@@ -13,17 +13,9 @@
 		<TextView 
 			android:layout_width="match_parent"
 	        android:layout_height="wrap_content"
-		 	android:text="String 1"/>
+	        style="@style/help_text"
+		 	android:text="@string/instructions"/>
 		
-		<TextView 
-			android:layout_width="match_parent"
-	        android:layout_height="wrap_content"
-		 	android:text="String 2"/>
-		 
-		<TextView 
-		 	android:layout_width="match_parent"
-	        android:layout_height="wrap_content"
-		 	android:text="String 3"/>
 			
 	</LinearLayout>
 </ScrollView>

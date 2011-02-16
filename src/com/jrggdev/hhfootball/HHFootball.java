@@ -117,7 +117,6 @@ public class HHFootball extends Activity implements DialogInterface.OnClickListe
 		finish();
 	}
 
-	@Override
 	public void onClick(DialogInterface dialog, int id)
 	{
 		switch (id)

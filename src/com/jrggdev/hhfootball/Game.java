@@ -3,10 +3,12 @@ package com.jrggdev.hhfootball;
 import java.util.Random;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
@@ -35,6 +37,7 @@ import com.jrggdev.hhfootball.GameClock.Period;
 public class Game extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener, GameClock.GameClockHandler
 {
 	private static String TAG = "HHFootball";
+	private PowerManager.WakeLock mWakeLock;
 	
 	/** Child view definitions */
 	private FieldView mFieldView;
@@ -254,6 +257,10 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+		
+		PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
+	    mWakeLock = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, TAG);
+	    mWakeLock.acquire();
 
 		setContentView(R.layout.hhfootball_layout);
 		
@@ -323,6 +330,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	@Override
 	protected void onDestroy() 
 	{
+		mWakeLock.release();
 		mSoundManager.release();
 		super.onDestroy();
 	}
@@ -795,6 +803,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		swapOrientation();
 		mGameState=GameState.KICK_RETURN;
 		mState=State.PLAY_LIVE;
+		updateDriveStatus();
 		
 		for (PlayerIterator i=mOffense.iterator();i.hasNext();)
 			i.next().set(-1,-1);
@@ -1550,6 +1559,9 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				break;
 			case FIELD_GOAL_ATTEMPT:
 				mDriveView.setText(getString(R.string.info_field_goal));
+				break;
+			case KICK_RETURN:
+				mDriveView.setText(getString(R.string.info_kick_return));
 				break;
 			default:
 				mDriveView.setText(driveStatusToString());

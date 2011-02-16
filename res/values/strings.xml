@@ -35,6 +35,7 @@
 	<string name="info_touchdown">TOUCHDOWN!</string>
 	<string name="info_safety">Safety</string>
 	<string name="info_freekick">Free Kick</string>
+	<string name="info_kick_return">Kick Return</string>	
 	<string name="info_touchback">Touchback</string>
 	<string name="info_interception">Interception</string>
 	<string name="info_incomplete">Incomplete</string>
@@ -47,13 +48,11 @@
 	<string name="info_halftime">Halftime</string>
 	<string name="info_end_of_third_quarter">End of 3rd Quarter</string>
 	<string name="info_game_over">Game Over</string>
-	
 	<string name="settings_title">HandHeld Football Settings</string>
 	<string name="setting_sound">Game Sounds</string>
 	<string name="setting_sound_summary_on">Disable if you don\'t want game sounds</string>
 	<string name="setting_sound_summary_off">Enable to hear game sounds</string>
 	<string name="setting_sound_default_value">true</string>
-	
 	<string name="setting_period_length">Period Length</string>
 	<string name="setting_period_length_summary">Specifies number of minutes per quarter</string>
 	<string-array name="setting_period_length_entries">
@@ -74,7 +73,6 @@
 	</string-array>	
 	<string name="setting_period_length_default_value">4</string>
 	<string name="setting_period_length_dialog_title">Select a period length</string>
-	
 	<string name="setting_difficulty">Difficulty</string>
 	<string name="setting_difficulty_summary">Specifies the difficulty level</string>
 	<string-array name="setting_difficulty_entries">
@@ -93,9 +91,18 @@
 		<item>How To Play</item>
 		<item>Contact Developer</item>
 	</string-array>
-
 	<string name="dev_email_address">jeffclyne@mindless.com</string>
 	<string name="dev_email_subject">HandHeld Football Feedback</string>
 	<string name="dev_email_error_title">Error</string>
 	<string name="dev_email_error_msg">No email application found!</string>
+	<string name="instructions">HandHeld Football is a new take on the classic electronic sports games of the \'70s and \'80s. 
+	The computer controls the defense, you control the offense.\n\nKicking - The kick power meter indicates the kick power. Press 
+	KICK, when the meter is active, to kick with the desired level.\n\nPress HUDDLE when a play is dead to reset the formation.\n\nYou 
+	initially control the quarterback. Move the quarterback backwards to snap the ball. Once the ball is snapped, the defense and your receiver
+	will become active.\n\nPress PASS to throw a pass to your receiver. You can safely throw the ball over the head of defenders
+	that are in the backfield. Otherwise, they will intercept the ball.\n\nPress the KICK button at the line of scrimmage to bring
+	up the kick meter and attempt a field goal. The chance of making a field goal go up with attempts from shorter distances, as
+	well as the power of the kick.\n\nTo punt the ball, press kick after the ball is snapped to bring up the kick meter	and punt.\n\nThere 
+	are 3 levels of difficulty that increase the speed and intelligence of the defense, as well as the accuracy of field goals.
+	 </string>
 </resources>

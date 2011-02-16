@@ -97,7 +97,6 @@ public class KickMeter extends ProgressBar implements Runnable
 	{
 		synchronized(this)
 		{
-			boolean ret=enabled;
 			if (enabled)
 			{
 				setVisibility(INVISIBLE);
@@ -127,7 +126,6 @@ public class KickMeter extends ProgressBar implements Runnable
 		return getProgress()+mMin;
 	}
 	
-	@Override
 	public void run()
 	{
 		float delayFactor=(float)((mMaxDelay-mMinDelay))/(float)(super.getMax());
