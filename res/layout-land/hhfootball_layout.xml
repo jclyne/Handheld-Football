@@ -67,7 +67,7 @@
 		android:layout_width="match_parent"
         android:layout_height="118dip">
         
-		<com.jrggdev.hhfootball.FieldView
+		<com.redpantssoft.hhfootball.FieldView
 		 	android:id="@+id/hhfootballview"
 			android:layout_width="match_parent"
 	        android:layout_height="match_parent"/> 
@@ -85,7 +85,7 @@
         android:layout_height="wrap_content"
         android:paddingBottom="5dip">
         
-        <com.jrggdev.hhfootball.KickMeter
+        <com.redpantssoft.hhfootball.KickMeter
 		 	android:id="@+id/kick_meter"
 			android:layout_width="match_parent"
 	        android:layout_height="wrap_content"
