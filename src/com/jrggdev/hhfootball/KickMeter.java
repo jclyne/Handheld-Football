@@ -3,41 +3,42 @@ package com.jrggdev.hhfootball;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.widget.ProgressBar;
 
-import com.jrggdev.Timer;
-import com.jrggdev.Timer.TimerHandler;
-
-public class KickMeter extends ProgressBar implements TimerHandler
+public class KickMeter extends ProgressBar implements Runnable
 {
+	private String TAG="KickMeter";
 	private int mMin=10;
-	private int mSpeed=0;
-		
-	private Timer mTimer;
+	private int mMaxDelay=100;
+	private int mMinDelay=10;
+	
+	private boolean enabled;
+	private Thread mThread;
 	
 	public KickMeter(Context context, AttributeSet attrs, int defStyle)
 	{
 		super(context, attrs, defStyle);
-		mTimer = new Timer(mSpeed,this);
+		enabled=false;
 	}
 
 	public KickMeter(Context context, AttributeSet attrs)
 	{
 		super(context, attrs);
-		mTimer = new Timer(mSpeed,this);
+		enabled=false;
 	}
 
 	public KickMeter(Context context)
 	{
 		super(context);
-		mTimer = new Timer(mSpeed,this);
+		enabled=false;
 	}
+	
 	
 	public Bundle serialize()
 	{
 		Bundle bundle = new Bundle();
 		bundle.putInt("mMin", mMin);
-		bundle.putInt("mSpeed", mSpeed);
 		bundle.putInt("mMax", getMax());
 		bundle.putBoolean("enabled", isEnabled());
 		bundle.putInt("progress", getProgress());
@@ -50,12 +51,7 @@ public class KickMeter extends ProgressBar implements TimerHandler
 		disable();
 		setMinMax(bundle.getInt("mMin"),bundle.getInt("mMax"));
 		if (bundle.getBoolean("enabled"))
-		{
-			setProgress(bundle.getInt("progress"));
-			setVisibility(VISIBLE);
-			mTimer.start(bundle.getInt("mSpeed"));
-		}
-		
+			enable(bundle.getInt("progress"));
 	}
 	
 	public int getMin()
@@ -75,38 +71,93 @@ public class KickMeter extends ProgressBar implements TimerHandler
 		super.setMax(max-mMin);
 	}
 
-	public boolean isEnabled()
+	public synchronized boolean isEnabled()
 	{
-		return getVisibility() == VISIBLE;
+		return enabled;
 	}
 	
-	public void enable()
+	public synchronized void enable()
 	{
-		setProgress(0);
-		setVisibility(VISIBLE);
-		mTimer.start(mSpeed);
+		enable(0);
 	}
 	
-	public void disable()
+	public synchronized void enable(int progress)
 	{
-		setVisibility(INVISIBLE);
-		mTimer.stop();
+		if (!enabled)
+		{
+			setVisibility(VISIBLE);
+			setProgress(progress);
+			enabled=true;
+			mThread = new Thread(this);
+			mThread.start();
+		}
 	}
 	
-	public int getPowerValue()
+	public boolean disable()
+	{
+		synchronized(this)
+		{
+			boolean ret=enabled;
+			if (enabled)
+			{
+				setVisibility(INVISIBLE);
+				enabled=false;
+				notifyAll();
+			}
+			else
+				return false;
+		}
+		
+		while (mThread.isAlive())
+		{
+			try
+			{
+				mThread.join();
+			}
+			catch (InterruptedException e)
+			{
+				continue;
+			}
+		}
+		return true;
+	}
+	
+	public synchronized int getPowerValue()
 	{
 		return getProgress()+mMin;
 	}
 	
-	public boolean HandleTimer()
+	@Override
+	public void run()
 	{
-		int val=getProgress()+1;
-		if (val > super.getMax())
-			val = 0;
-		setProgress(val);
-		
-		// Make the meter progressively faster as the power increases
-//		mTimer.start(mSpeed - ((mSpeed*val)/super.getMax()));
-		return true;
+		float delayFactor=(float)((mMaxDelay-mMinDelay))/(float)(super.getMax());
+		Log.d(TAG,String.format("delayFactor: %3.2f",delayFactor));
+		synchronized (this)
+		{
+			while (enabled)
+			{
+				if (!enabled)
+					return;
+				
+				int val=getProgress()+1;
+				if (val > super.getMax())
+					val = 0;
+				setProgress(val);
+				
+				int wait_time = (int) ((float)(mMaxDelay) - (float)(val*delayFactor));
+				
+				long start=System.currentTimeMillis();
+				while (wait_time > 0)
+				{
+					try{
+						this.wait(wait_time);
+						break;
+					}
+					catch (InterruptedException e){
+						wait_time-=System.currentTimeMillis()-start;
+					}
+				}
+			}
+		}
 	}
 }

@@ -33,6 +33,8 @@
 	<string name="info_field_goal_miss">No Good</string>
 	<string name="info_field_goal_make">Its Good!</string>
 	<string name="info_touchdown">TOUCHDOWN!</string>
+	<string name="info_safety">Safety</string>
+	<string name="info_freekick">Free Kick</string>
 	<string name="info_touchback">Touchback</string>
 	<string name="info_interception">Interception</string>
 	<string name="info_incomplete">Incomplete</string>
@@ -87,5 +89,13 @@
 	</string-array>	
 	<string name="setting_difficulty_default_value">medium</string>
 	<string name="setting_difficulty_dialog_title">Select a difficulty level</string>
+	<string-array name="about_items">
+		<item>How To Play</item>
+		<item>Contact Developer</item>
+	</string-array>
 
+	<string name="dev_email_address">jeffclyne@mindless.com</string>
+	<string name="dev_email_subject">HandHeld Football Feedback</string>
+	<string name="dev_email_error_title">Error</string>
+	<string name="dev_email_error_msg">No email application found!</string>
 </resources>

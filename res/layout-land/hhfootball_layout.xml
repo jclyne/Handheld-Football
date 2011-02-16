@@ -91,6 +91,7 @@
 	        android:layout_height="wrap_content"
 	        android:layout_gravity="bottom"
 	        android:visibility="gone"
+	        android:progressDrawable="@drawable/kick_meter"
 	        style="?android:attr/progressBarStyleHorizontal"
 	        android:max="100" />
 	        

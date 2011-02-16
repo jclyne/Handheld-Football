@@ -141,6 +141,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	
 	private static final int mTouchbackPos=20;
 	private static final int mKickoffPos=30;
+	private static final int mFreeKickPos=20;
 	private static final int mDownsPerSeries=4;
 	private static final int mYardsForFirstDown=10;
 	private static final int mStartingXPos=3;
@@ -172,7 +173,8 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		FIELD_GOAL_ATTEMPT,
 		FIELD_GOAL_MAKE,
 		FIELD_GOAL_MISS,
-		SAFETY;
+		SAFETY,
+		FREEKICK;
 		
 		public boolean isTurnover()
 		{
@@ -396,11 +398,6 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		{
 			mSoundManager.setMute(settings.getBoolean("sound", true) == false);
 		}
-//		else if (key.equals("period_length"))
-//		{
-//			mPeriodLengthMins=Integer.parseInt(settings.getString("period_length", 
-//												String.valueOf(mPeriodLengthMins)));
-//		}
 		else if (key.equals("difficulty"))
 		{
 			mDifficulty = Difficulty.valueOf(settings.getString("difficulty", mDifficulty.name()));
@@ -505,6 +502,18 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				mKickMeter.setMinMax(20,75);
 				mKickMeter.enable();
 				return;
+				
+			case FREEKICK:
+				mState=State.PRE_KICKOFF;
+				mFieldPos=(mOffense.orientation() == Team.ORIENTATION_RIGHT)?mFreeKickPos:100-mFreeKickPos;
+				arrangePreSnapFormation(mOffense);
+				arrangePreSnapFormation(mDefense);
+				mInfoView.setText(getString(R.string.info_freekick),mInfoDuration);
+				updateDriveStatus();
+				mKickMeter.setMinMax(20,75);
+				mKickMeter.enable();
+				return;
+				
 			case TOUCHBACK:
 				handleTouchBack();
 				break;
@@ -532,6 +541,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		switch (mGameState)
 		{
 			case KICKOFF: 
+			case FREEKICK:
 				formation = team.getKickoffFormation();
 				break;
 				
@@ -666,7 +676,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mGameClock.stop();
 		mAiUpdater.stop();
 		mState = State.PLAY_DEAD;
-			
+
 		switch (mGameState)
 		{
 			case KICK_RETURN:
@@ -683,6 +693,11 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				mSoundManager.playSfx(AUDIO_TOUCHDOWN,false);
 				mInfoView.setText(getString(R.string.info_touchdown));
 				mGameState=GameState.KICKOFF;
+				break;
+				
+			case SAFETY:
+				mInfoView.setText(getString(R.string.info_safety),mInfoDuration);
+				mGameState=GameState.FREEKICK;
 				break;
 				
 			case FIELD_GOAL_MAKE:
@@ -712,7 +727,11 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 					mGameState=GameState.DRIVE_IN_PROGRESS;
 				}
 				
-				if (checkFirstDown())
+				if (isSafety())
+				{
+					handleSafety();
+				}
+				else if (checkFirstDown())
 				{
 					handleFirstDown();
 					mSoundManager.playSfx(AUDIO_FIRST_DOWN,false);
@@ -820,6 +839,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 					return;
 				case PUNT:
 				case KICKOFF:
+				case FREEKICK:
 				default:
 					mGameState=GameState.TOUCHBACK;
 					handlePlayDead();
@@ -837,6 +857,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 					return;
 				case PUNT:
 				case KICKOFF:
+				case FREEKICK:
 				default:
 					handleKickReception();
 					return;
@@ -863,6 +884,25 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		updateScoreBoard();
 		handlePlayDead();
 	}
+	
+	private void handleSafety()
+	{
+		if (mDefense.side() == Team.SIDE_HOME)
+		{
+			mHomeScore+=2;
+			mSoundManager.playSfx(AUDIO_CROWD_CHEER, false);
+		}
+		else
+		{
+			mVisitorScore+=2;
+			mSoundManager.playSfx(AUDIO_CROWD_BOO, false);
+		}
+		
+		mGameState=GameState.SAFETY;
+		updateScoreBoard();
+		handlePlayDead();
+	}
+	
 	private void handleFieldGoal()
 	{
 		Log.i(TAG,String.format("Field Goal percentage %d%%",mDifficulty.perFieldGoalIsGood().getPercentage()+mKickPower));
@@ -920,7 +960,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		}
 	}
 	
-	private boolean ballInEndZone()
+	private boolean isTouchDown()
 	{
 		if (mOffense.orientation() == Team.ORIENTATION_RIGHT)
 		{
@@ -931,7 +971,18 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 			return (mFieldPos <= 0);
 		}
 	}
-	
+	private boolean isSafety()
+	{
+		if (mOffense.orientation() == Team.ORIENTATION_LEFT)
+		{
+			return (mFieldPos >= 100);
+		}
+		else
+		{
+			return (mFieldPos <= 0);
+		}
+	}
+		
 	private void moveBallCarrierLeft()
 	{
 		int newX=mOffense.quarterback().pos().x;
@@ -955,7 +1006,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 			if (ballAcrossLineOfScrimmage())
 				mOffense.receiver().set(-1,-1);
 						
-			if (ballInEndZone())
+			if (isTouchDown())
 				handleTouchDown();
 				
 		}
@@ -1009,7 +1060,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 			if (ballAcrossLineOfScrimmage())
 				mOffense.receiver().set(-1,-1);
 						
-			if (ballInEndZone())
+			if (isTouchDown())
 				handleTouchDown();
 		}
 		else
@@ -1150,11 +1201,10 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	
 	public void onKick(View view)
 	{	
-		if (mKickMeter.isEnabled())
+		if (mKickMeter.disable())
 		{
 			mKickPower=mKickMeter.getPowerValue();
 			Log.i(TAG,String.format("KickMeter kick power = %d",mKickPower));
-			mKickMeter.disable();
 			mBallPos=new Coordinate(mOffense.quarterback().pos());
 			mSoundManager.playSfx(AUDIO_KICK,false);
 			mInfoView.clearText();
@@ -1230,6 +1280,11 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	private void handleInterception(Player defender)
 	{
 		mFieldPos+=(defender.pos().x - mOffense.quarterback().pos().x);
+		if (mFieldPos > 100)
+			mFieldPos=100-mTouchbackPos;
+		else if (mFieldPos < 0)
+			mFieldPos=mTouchbackPos;
+		
 		defender.setFlashing(true);
 		mGameState=GameState.INTERCEPTION;
 		handlePlayDead();
@@ -1279,8 +1334,8 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		switch (mState)
 		{
 			case PLAY_LIVE:
-				Game.this.OnMoveDefense(); 
-				Game.this.OnMoveReceiver(); 
+				Game.this.onMoveDefense(); 
+				Game.this.onMoveReceiver(); 
 				return (mState==State.PLAY_LIVE);
 			case PASS:
 				return true;
@@ -1292,7 +1347,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		}
 	}
 	
-	protected void OnMoveReceiver()
+	protected void onMoveReceiver()
 	{
 		if ( !mDifficulty.perReceiverMoves().test() || 
 				mOffense.receiver().pos().x == -1 ||
@@ -1335,7 +1390,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	}
 	
 	
-	protected void OnMoveDefense() 
+	protected void onMoveDefense() 
 	{
 		if ( ! mDifficulty.perDefenderMoves().test())
 		{
@@ -1365,14 +1420,15 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	    	int y = bRand.nextInt(getFieldWidth());
 	    	int x = bRand.nextInt(getFieldLength());
 	    	
-	    	while ( (mOffense.findPlayer(x,y)!=null) && (mDefense.findPlayer(x,y)!=null) )
+	    	while ( (mOffense.findPlayer(x,y)!=null) || (mDefense.findPlayer(x,y)!=null) )
 	    	{
-	    		Log.d(TAG,String.format("OnMoveDefense, pos make visible occupied at %d %d",x,y));
+	    		Log.d(TAG,String.format("onMoveDefense, pos make visible occupied at %d %d",x,y));
 	    		y = bRand.nextInt(getFieldWidth());
 		    	x = bRand.nextInt(getFieldLength());
 	    	}
-	    	Log.d(TAG,String.format("OnMoveDefense, defender now visible at %d %d",x,y));
+	    	Log.d(TAG,String.format("onMoveDefense, defender now visible at %d %d",x,y));
 	    	defender.set(x,y);
+	    	assert(!defender.equals(ballCarrier));
 	    }
 	}
 
@@ -1489,6 +1545,9 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 			case PUNT:
 				mDriveView.setText(getString(R.string.info_punt));
 				break;
+			case FREEKICK:
+				mDriveView.setText(getString(R.string.info_freekick));
+				break;
 			case FIELD_GOAL_ATTEMPT:
 				mDriveView.setText(getString(R.string.info_field_goal));
 				break;
@@ -1567,6 +1626,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 					case KICKOFF:
 					case FIELD_GOAL_MAKE:
 					case FIELD_GOAL_MISS:
+					case FREEKICK:
 					case TOUCHBACK:
 						mFieldView.clearTiles();
 						break;
