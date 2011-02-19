@@ -1,11 +1,11 @@
-package com.jrggdev.hhfootball;
+package com.redpantssoft.hhfootball;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import android.os.Bundle;
 
-import com.jrggdev.Coordinate;
+import com.redpantssoft.Coordinate;
 
 
 abstract class Player

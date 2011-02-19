@@ -1,4 +1,4 @@
-package com.jrggdev;
+package com.redpantssoft;
 
 import android.os.Handler;
 import android.os.Message;

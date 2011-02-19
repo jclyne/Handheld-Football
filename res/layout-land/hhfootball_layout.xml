@@ -2,8 +2,8 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:id="@+id/LinearLayout01"
-	android:layout_width="match_parent" 
-	android:layout_height="match_parent"
+	android:layout_width="fill_parent" 
+	android:layout_height="fill_parent"
 	android:orientation="vertical"
 	android:background="@drawable/field_background">
 	
@@ -64,30 +64,30 @@
 	</TableLayout>
 	
 	<FrameLayout
-		android:layout_width="match_parent"
+		android:layout_width="fill_parent"
         android:layout_height="118dip">
         
-		<com.jrggdev.hhfootball.FieldView
+		<com.redpantssoft.hhfootball.FieldView
 		 	android:id="@+id/hhfootballview"
-			android:layout_width="match_parent"
-	        android:layout_height="match_parent"/> 
+			android:layout_width="fill_parent"
+	        android:layout_height="fill_parent"/> 
 	        
         <TextView
 	    	android:id="@+id/info_view"
-	    	android:layout_width="match_parent"
-			android:layout_height="match_parent"
+	    	android:layout_width="fill_parent"
+			android:layout_height="fill_parent"
 			style="@style/info_land"/>
 			
 	</FrameLayout>
 		
 	<FrameLayout
-		android:layout_width="match_parent"
+		android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="5dip">
         
-        <com.jrggdev.hhfootball.KickMeter
+        <com.redpantssoft.hhfootball.KickMeter
 		 	android:id="@+id/kick_meter"
-			android:layout_width="match_parent"
+			android:layout_width="fill_parent"
 	        android:layout_height="wrap_content"
 	        android:layout_gravity="bottom"
 	        android:visibility="gone"
@@ -96,7 +96,7 @@
 	        android:max="100" />
 	        
 		<LinearLayout
-			android:layout_width="match_parent"
+			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
 			android:weightSum="1.0">
 			
@@ -145,7 +145,7 @@
     </FrameLayout>
     
     <RelativeLayout
-		android:layout_width="match_parent"
+		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"	
 		android:layout_marginBottom="10dip"
 		android:layout_marginLeft="10dip"

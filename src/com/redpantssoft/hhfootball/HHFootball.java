@@ -1,4 +1,4 @@
-package com.jrggdev.hhfootball;
+package com.redpantssoft.hhfootball;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -13,7 +13,8 @@ import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import com.jrggdev.Timer;
+
+import com.redpantssoft.Timer;
 
 public class HHFootball extends Activity implements DialogInterface.OnClickListener
 {
