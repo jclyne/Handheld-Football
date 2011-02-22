@@ -1,4 +1,4 @@
-package com.jrggdev.hhfootball;
+package com.redpantssoft.hhfootball;
 
 import java.util.Random;
 

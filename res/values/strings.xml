@@ -53,6 +53,10 @@
 	<string name="setting_sound_summary_on">Disable if you don\'t want game sounds</string>
 	<string name="setting_sound_summary_off">Enable to hear game sounds</string>
 	<string name="setting_sound_default_value">true</string>
+	<string name="setting_vibrate">Vibrate on Tackle</string>
+	<string name="setting_vibrate_summary_on">Disable if you don\'t want a vibration when tackled</string>
+	<string name="setting_vibrate_summary_off">Enable to feel a vibration when tackled</string>
+	<string name="setting_vibrate_default_value">true</string>
 	<string name="setting_period_length">Period Length</string>
 	<string name="setting_period_length_summary">Specifies number of minutes per quarter</string>
 	<string-array name="setting_period_length_entries">
@@ -101,7 +105,7 @@
 	initially control the quarterback. Move the quarterback backwards to snap the ball. Once the ball is snapped, the defense and your receiver
 	will become active.\n\nPress PASS to throw a pass to your receiver. You can safely throw the ball over the head of defenders
 	that are in the backfield. Otherwise, they will intercept the ball.\n\nPress the KICK button at the line of scrimmage to bring
-	up the kick meter and attempt a field goal. The chance of making a field goal go up with attempts from shorter distances, as
+	up the kick meter and attempt a field goal. The chance of making a field goal goes up with attempts from shorter distances, as
 	well as the power of the kick.\n\nTo punt the ball, press kick after the ball is snapped to bring up the kick meter	and punt.\n\nThere 
 	are 3 levels of difficulty that increase the speed and intelligence of the defense, as well as the accuracy of field goals.
 	 </string>
