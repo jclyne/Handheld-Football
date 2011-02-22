@@ -70,8 +70,6 @@
 		 	android:id="@+id/hhfootballview"
 			android:layout_width="fill_parent"
 	         android:layout_height="fill_parent"/>
-        
-        
 	        
         <TextView
 	    	android:id="@+id/info_view"
@@ -147,81 +145,89 @@
     <RelativeLayout
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent"	
+		android:layout_marginTop="10dip"
 		android:layout_marginBottom="10dip"
 		android:layout_marginLeft="10dip"
 		android:layout_marginRight="10dip"
 		android:gravity="center_vertical">
 		
 		<Button
-			android:id="@+id/huddle_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			style="@style/button"
-			android:text="HUDDLE"
-			android:onClick="onHuddle"
-			android:background="@drawable/controller_button"/>
-				
-		<Button
 			android:id="@+id/pass_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_marginRight="30dip"
+			android:layout_width="80dip"
+			android:layout_height="80dip"
 			style="@style/button"
 			android:text="PASS"
 			android:onClick="onPass"
 			android:background="@drawable/controller_button"
-			android:layout_below="@+id/huddle_button"
-			android:layout_toRightOf="@+id/huddle_button"/>
+			android:layout_marginTop="10dip"
+			android:layout_marginBottom="10dip"
+			android:layout_marginLeft="20dip"
+			android:layout_alignParentLeft="true"
+			android:layout_centerVertical="true"/>
 			
 		<Button
+			android:id="@+id/huddle_button"
+			android:layout_width="70dip"
+			android:layout_height="70dip"
+			style="@style/button"
+			android:text="HUDDLE"
+			android:onClick="onHuddle"
+			android:background="@drawable/controller_button"
+			android:layout_above="@+id/pass_button"
+			android:layout_alignParentLeft="true"/>
+				
+		<Button
 			android:id="@+id/kick_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
+			android:layout_width="70dip"
+			android:layout_height="70dip"
 			style="@style/button"
 			android:text="KICK"
 			android:onClick="onKick"
 			android:background="@drawable/controller_button"
-			android:layout_below="@+id/pass_button"/>
+			android:layout_below="@+id/pass_button"
+			android:layout_alignParentLeft="true"/>
 			
 		<Button
 			android:id="@+id/right_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
+			android:layout_width="70dip"
+			android:layout_height="70dip"
 			style="@style/button"
 			android:onClick="onRight"
 			android:background="@drawable/right_button"
-			android:layout_below="@+id/huddle_button"
+			android:layout_alignTop="@+id/pass_button"
 			android:layout_alignParentRight="true"/>
 			
 		<Button
 			android:id="@+id/up_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
+			android:layout_width="70dip"
+			android:layout_height="70dip"
 			style="@style/button"
 			android:onClick="onUp"
 			android:background="@drawable/up_button"
-			android:layout_toLeftOf="@+id/right_button"
-			android:layout_above="@+id/right_button"/>
+			android:layout_marginRight="47dip"
+			android:layout_above="@+id/right_button"
+			android:layout_alignParentRight="true"/>
 			
 		<Button
 			android:id="@+id/down_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
+			android:layout_width="70dip"
+			android:layout_height="70dip"
 			style="@style/button"
 			android:onClick="onDown"
 			android:background="@drawable/down_button"
-			android:layout_toLeftOf="@+id/right_button"
+			android:layout_alignRight="@+id/up_button"
 			android:layout_below="@+id/right_button"/>
 
 		<Button
 			android:id="@+id/left_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
+			android:layout_width="70dip"
+			android:layout_height="70dip"
 			style="@style/button"
 			android:onClick="onLeft"
 			android:background="@drawable/left_button"
-			android:layout_toLeftOf="@+id/down_button"
-			android:layout_above="@+id/down_button"/>
+			android:layout_marginRight="25dip"
+			android:layout_toLeftOf="@+id/right_button"
+			android:layout_alignTop="@+id/right_button"/>
 	
 	</RelativeLayout>
 	

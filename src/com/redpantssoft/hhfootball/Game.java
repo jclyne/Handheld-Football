@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
@@ -38,6 +39,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 {
 	private static String TAG = "HHFootball";
 	private PowerManager.WakeLock mWakeLock;
+	private Vibrator mVibrator;
 	
 	/** Child view definitions */
 	private FieldView mFieldView;
@@ -68,12 +70,13 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	private static final int AUDIO_FIRST_DOWN=10;
 	private static final int AUDIO_BUZZER=11;
 	
+	private static final int VIBRATE_DURATION=100;
 	/** Defines whether the game is paused or not */
 		
 	/** Game States */
 	protected enum State 
 	{ 
-		PLAY_LIVE,PLAY_DEAD,PRE_SNAP,PRE_KICKOFF,KICK,PASS,GAME_OVER;
+		PLAY_LIVE,PLAY_DEAD,PRE_SNAP,PRE_KICKOFF,KICK,KICK_RECEIVED,PASS,GAME_OVER;
 	}
 
 	/**
@@ -95,7 +98,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	private enum Difficulty
 	{
 		easy(25,10,0,90),
-		medium(25,10,25,80),
+		medium(30,10,15,80),
 		hard(50,10,50,70);
 		
 		private Percentage mDefenderMoves;
@@ -118,6 +121,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	}
 	
 	private Difficulty mDifficulty=Difficulty.medium;
+	private boolean mVibrate=true;
 	
 	private static final int mGameRefreshRate=100;
 	private Timer mGameUpdater = new Timer(mGameRefreshRate,new Timer.TimerHandler() {
@@ -262,6 +266,8 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	    mWakeLock = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, TAG);
 	    mWakeLock.acquire();
 
+	    mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+	    
 		setContentView(R.layout.hhfootball_layout);
 		
 		mFieldView = (FieldView)findViewById(R.id.hhfootballview);		
@@ -282,6 +288,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		// Get the current settings values
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
 		mSoundManager.setMute(settings.getBoolean("sound", true) == false);
+		mVibrate=settings.getBoolean("vibrate", mVibrate);
 		mPeriodLengthMins=Integer.parseInt(settings.getString("period_length", 
 											String.valueOf(mPeriodLengthMins)));
 		mDifficulty = Difficulty.valueOf(settings.getString("difficulty", mDifficulty.name()));
@@ -406,13 +413,16 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		{
 			mSoundManager.setMute(settings.getBoolean("sound", true) == false);
 		}
+		else if (key.equals("vibrate"))
+		{
+			mVibrate=settings.getBoolean("vibrate", mVibrate);
+		}
 		else if (key.equals("difficulty"))
 		{
 			mDifficulty = Difficulty.valueOf(settings.getString("difficulty", mDifficulty.name()));
 		}
 		
 	}
-	
 	
 	/**
 	 * Restore game state if our process is being relaunched
@@ -689,6 +699,8 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		{
 			case KICK_RETURN:
 				mSoundManager.playSfx(AUDIO_TACKLE,false);
+				if (mVibrate)
+					mVibrator.vibrate(VIBRATE_DURATION);
 				handleFirstDown();
 				mGameState=GameState.DRIVE_IN_PROGRESS;
 				break;
@@ -728,7 +740,9 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 			case DRIVE_IN_PROGRESS:
 				if (mGameState==GameState.DRIVE_IN_PROGRESS)
 				{
-					mSoundManager.playSfx(AUDIO_TACKLE,false);
+					mSoundManager.playSfx(AUDIO_TACKLE,false);	
+					if (mVibrate)
+						mVibrator.vibrate(VIBRATE_DURATION);
 				}
 				else
 				{
@@ -802,7 +816,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		swapSides();
 		swapOrientation();
 		mGameState=GameState.KICK_RETURN;
-		mState=State.PLAY_LIVE;
+		mState=State.KICK_RECEIVED;
 		updateDriveStatus();
 		
 		for (PlayerIterator i=mOffense.iterator();i.hasNext();)
@@ -812,7 +826,6 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 			i.next().set(-1,-1);
 		
 		mOffense.quarterback().set(mBallPos.x,mBallPos.y);	
-		mAiUpdater.start();
 	}
 	
 	private void onHandleKick()
@@ -1037,7 +1050,15 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				if (mOffense.orientation() != Team.ORIENTATION_RIGHT)
 					return;
 				handleSnap();
-				
+				moveBallCarrierLeft();
+				break;
+			case KICK_RECEIVED:
+				mState=State.PLAY_LIVE;
+				updateDriveStatus();
+				mGameClock.start();
+				mAiUpdater.start();
+				moveBallCarrierLeft();
+				break;	
 			case PLAY_LIVE:
 				moveBallCarrierLeft();
 				return;
@@ -1091,9 +1112,19 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				if (mOffense.orientation() != Team.ORIENTATION_LEFT)
 					return;
 				handleSnap();
+				moveBallCarrierRight();
+				break;
+			case KICK_RECEIVED:
+				mState=State.PLAY_LIVE;
+				updateDriveStatus();
+				mGameClock.start();
+				mAiUpdater.start();
+				moveBallCarrierRight();
+				break;
 			case PLAY_LIVE:
 				moveBallCarrierRight();
-				return;
+				break;
+				
 			default:
 				return;
 		}
@@ -1130,6 +1161,13 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		
 		switch (mState)
 		{
+			case KICK_RECEIVED:
+				mState=State.PLAY_LIVE;
+				updateDriveStatus();
+				mGameClock.start();
+				mAiUpdater.start();
+				moveBallCarrierUp();
+				break;
 			case PLAY_LIVE:
 				moveBallCarrierUp();
 				break;
@@ -1169,6 +1207,13 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		
 		switch (mState)
 		{
+			case KICK_RECEIVED:
+				mState=State.PLAY_LIVE;
+				updateDriveStatus();
+				mGameClock.start();
+				mAiUpdater.start();
+				moveBallCarrierDown();
+				break;
 			case PLAY_LIVE:
 				moveBallCarrierDown();
 				break;
@@ -1218,7 +1263,6 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 			mSoundManager.playSfx(AUDIO_KICK,false);
 			mInfoView.clearText();
 			mState = State.KICK;
-			mGameClock.start();
 		}
 		else
 		{
@@ -1649,6 +1693,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				break;
 			case PLAY_LIVE:
 			case PRE_SNAP:
+			case KICK_RECEIVED:
 				updatePlayerTiles(flash);
 				break;
 				
@@ -1670,7 +1715,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				mFieldView.setTile(FOOTBALL,mBallPos.x,mBallPos.y);
 				updateDriveStatus();
 				break;
-				
+
 			default:
 				break;
 		}

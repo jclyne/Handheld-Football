@@ -147,7 +147,6 @@
     <RelativeLayout
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"	
-		android:layout_marginBottom="10dip"
 		android:layout_marginLeft="10dip"
 		android:layout_marginRight="10dip"
 		android:gravity="center_vertical">
@@ -159,7 +158,8 @@
 			style="@style/button"
 			android:text="HUDDLE"
 			android:onClick="onHuddle"
-			android:background="@drawable/controller_button"/>
+			android:background="@drawable/controller_button"
+			android:layout_alignParentTop="true"/>
 				
 		<Button
 			android:id="@+id/kick_button"
@@ -169,58 +169,58 @@
 			android:text="KICK"
 			android:onClick="onKick"
 			android:background="@drawable/controller_button"
-			android:layout_below="@+id/huddle_button"/>
+			android:layout_alignParentBottom="true"/>
 			
 		<Button
 			android:id="@+id/pass_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_marginTop="27dip"
+			android:layout_width="70dip"
+			android:layout_height="70dip"
 			style="@style/button"
 			android:text="PASS"
 			android:onClick="onPass"
 			android:background="@drawable/controller_button"
-			android:layout_toRightOf="@+id/huddle_button"/>
+			android:layout_toRightOf="@+id/huddle_button"
+			android:layout_centerVertical="true"/>
 			
 		<Button
 			android:id="@+id/right_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
+			android:layout_width="70dip"
+			android:layout_height="70dip"
 			style="@style/button"
 			android:onClick="onRight"
 			android:background="@drawable/right_button"
 			android:layout_alignParentRight="true"
-			android:layout_alignTop="@+id/pass_button"/>
+			android:layout_centerVertical="true"/>
 			
 		<Button
 			android:id="@+id/up_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
+			android:layout_width="60dip"
+			android:layout_height="60dip"
 			style="@style/button"
 			android:onClick="onUp"
 			android:background="@drawable/up_button"
 			android:layout_toLeftOf="@+id/right_button"
-			android:layout_alignTop="@+id/huddle_button"/>
+			android:layout_alignParentTop="true"/>
 			
 		<Button
 			android:id="@+id/down_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
+			android:layout_width="60dip"
+			android:layout_height="60dip"
 			style="@style/button"
 			android:onClick="onDown"
 			android:background="@drawable/down_button"
 			android:layout_toLeftOf="@+id/right_button"
-			android:layout_alignTop="@+id/kick_button"/>
+			android:layout_alignParentBottom="true"/>
 
 		<Button
 			android:id="@+id/left_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
+			android:layout_width="70dip"
+			android:layout_height="70dip"
 			style="@style/button"
 			android:onClick="onLeft"
 			android:background="@drawable/left_button"
 			android:layout_toLeftOf="@+id/down_button"
-			android:layout_alignTop="@+id/right_button"/>
+			android:layout_centerVertical="true"/>
 		
 	</RelativeLayout>>	
 	
