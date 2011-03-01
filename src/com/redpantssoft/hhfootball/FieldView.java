@@ -117,7 +117,7 @@ public class FieldView extends View
 	}
 
 	/**
-	 * Handles scales the field bitmaps to fit in to the size of the top level view
+	 * Handles scaling the field bitmaps to fit in to the size of the top level view
 	 */
 	@Override
 	protected void onSizeChanged(int w, int h, int oldw, int oldh)

@@ -42,18 +42,9 @@ public class HHFootball extends Activity implements DialogInterface.OnClickListe
 
 		mSplashSound= MediaPlayer.create(this, R.raw.splash);
 		((LinearLayout)findViewById(R.id.logoview)).setLayoutAnimationListener(new AnimationListener(){
-			public void onAnimationEnd(Animation animation)
-			{
-			}
-
-			public void onAnimationRepeat(Animation animation)
-			{				
-			}
-
-			public void onAnimationStart(Animation animation)
-			{		
-				mSplashSound.start();
-			}
+			public void onAnimationEnd(Animation animation){}
+			public void onAnimationRepeat(Animation animation){	}
+			public void onAnimationStart(Animation animation){mSplashSound.start();}
 		});
 		
 	}

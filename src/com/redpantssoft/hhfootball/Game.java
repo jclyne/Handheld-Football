@@ -3,7 +3,10 @@ package com.redpantssoft.hhfootball;
 import java.util.Random;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -27,12 +30,6 @@ import com.redpantssoft.hhfootball.GameClock.Period;
 
 
 /**
- * HHFootball: a simple game that everyone can enjoy.
- * 
- * This is an implementation of the classic Game "HHFootball", in which you
- * control a serpent roaming around the garden looking for apples. Be careful,
- * though, because when you catch one, not only will you become longer, but
- * you'll move faster. Running into yourself or the walls will end the game.
  * 
  */
 public class Game extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener, GameClock.GameClockHandler
@@ -235,7 +232,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case MENU_NEW_GAME:
-            	startNewGame();
+            	showDialog(MENU_NEW_GAME);
             	return true;
             	
             case MENU_SETTINGS:
@@ -245,13 +242,52 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
             	return true;
             	
             case MENU_QUIT:
-                finish();
+            	showDialog(MENU_QUIT);
                 return true;
         }
 
         return false;
     }
     
+	@Override
+	protected Dialog onCreateDialog(int id)
+	{
+		switch (id)
+		{
+			case MENU_NEW_GAME:
+				return new AlertDialog.Builder(this) 
+					.setTitle(R.string.menu_new_game)
+					.setMessage(R.string.confirm_exit_game)
+					.setNegativeButton(R.string.confirm_no, new DialogInterface.OnClickListener() {
+				           public void onClick(DialogInterface dialog, int id) {
+				        	   dialog.cancel();
+				           }
+				     })
+					.setPositiveButton(R.string.confirm_yes, new DialogInterface.OnClickListener() {
+				           public void onClick(DialogInterface dialog, int id) {
+				        	   startNewGame();
+				           }
+				     }) .create();
+				
+			case MENU_QUIT:
+				return new AlertDialog.Builder(this) 
+					.setTitle(R.string.menu_quit)
+					.setMessage(R.string.confirm_exit_game)
+					.setNegativeButton(R.string.confirm_no, new DialogInterface.OnClickListener() {
+				           public void onClick(DialogInterface dialog, int id) {
+				        	   dialog.cancel();
+				           }
+				     })
+					.setPositiveButton(R.string.confirm_yes, new DialogInterface.OnClickListener() {
+				           public void onClick(DialogInterface dialog, int id) {
+				        	   Game.this.finish();
+				           }
+				     }) .create();
+				
+		}
+		return super.onCreateDialog(id);
+	}
+
 	/**
 	 * Called when Activity is first created. Turns off the title bar, sets up
 	 * the content views, and fires up the HHFootballView.
@@ -361,9 +397,12 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	protected void onResume() {
 		super.onResume();
 		Log.i(TAG,"Activity Resumed");
-		mSoundManager.resume();
+		
 		switch (mState)
 		{
+			case GAME_OVER:
+				mInfoView.setText(getString(R.string.info_game_over));
+				return;			
 			case KICK:
 				mGameClock.start();
 				break;
@@ -376,6 +415,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				break;	
 		}
 		
+		mSoundManager.resume();
 		updateDriveStatus();
 		updateScoreBoard();
 		mGameUpdater.start();
@@ -448,7 +488,15 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mBallPos=new Coordinate(savedState.getBundle("mBallPos"));
 		mOffense=new Offense(savedState.getBundle("mOffense"));
 		mDefense=new Defense(savedState.getBundle("mDefense"));
-		initAudio();
+		switch (mState)
+		{
+			case GAME_OVER:
+				mSoundManager.release();
+				break;
+			default:
+				initAudio();
+				mSoundManager.playSfx(AUDIO_CROWD,true);
+		}
 	}
 	
 	private void initAudio()
@@ -465,7 +513,6 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mSoundManager.addSfx(AUDIO_FIRST_DOWN,R.raw.firstdown);
 		mSoundManager.addSfx(AUDIO_BUZZER,R.raw.buzzer);
 		mSoundManager.setSfxVolume(AUDIO_CROWD, 0.1f);
-		mSoundManager.playSfx(AUDIO_CROWD,true);
 	}
 	
 	/**
@@ -501,7 +548,6 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 
 	private void initPreSnap()
 	{
-		
 		handleNewPeriod();	
 		
 		mLineOfScrimmage=mFieldPos;
@@ -668,6 +714,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 					break;
 				case GAME_OVER:
 					return;
+					
 				default:
 					break;
 			}
