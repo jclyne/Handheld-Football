@@ -10,6 +10,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.os.Vibrator;
@@ -17,7 +19,9 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
@@ -32,7 +36,8 @@ import com.redpantssoft.hhfootball.GameClock.Period;
 /**
  * 
  */
-public class Game extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener, GameClock.GameClockHandler
+public class Game extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener, 
+												GameClock.GameClockHandler
 {
 	private static String TAG = "HHFootball";
 	private PowerManager.WakeLock mWakeLock;
@@ -120,8 +125,8 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	private Difficulty mDifficulty=Difficulty.medium;
 	private boolean mVibrate=true;
 	
-	private static final int mGameRefreshRate=100;
-	private Timer mGameUpdater = new Timer(mGameRefreshRate,new Timer.TimerHandler() {
+	private static final int GAME_REFRESH_RATE=100;
+	private Timer mGameUpdater = new Timer(GAME_REFRESH_RATE,new Timer.TimerHandler() {
 		private boolean mFlashToggle=false;
 		public boolean HandleTimer() { 
 			mFlashToggle=!mFlashToggle;
@@ -130,10 +135,18 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		} 
 	});
 	
-	private int mAiUpdateRate=250;
-	private Timer mAiUpdater = new Timer(mAiUpdateRate,new Timer.TimerHandler() {
+	private static final int AI_UPDATE_RATE=250;
+	private Timer mAiUpdater = new Timer(AI_UPDATE_RATE,new Timer.TimerHandler() {
 		public boolean HandleTimer() { 			
-			return Game.this.OnUpdateGameAI(); 
+			return Game.this.onUpdateGameAI(); 
+		} 
+	});
+	
+	private static final int HUDDLE_DELAY=2000;
+	private Timer mHuddleTimer = new Timer(HUDDLE_DELAY,new Timer.TimerHandler() {
+		public boolean HandleTimer() { 			
+			Game.this.initPreSnap(); 
+			return false;
 		} 
 	});
 	
@@ -287,6 +300,37 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		}
 		return super.onCreateDialog(id);
 	}
+	
+	private void setGameSkin()
+	{
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+		int idx = settings.getInt("skin", 0);
+		
+		View gameLayout = (View)findViewById(R.id.game_layout);
+		if (gameLayout != null)
+		{
+			Resources r = getResources();
+			gameLayout.setBackgroundDrawable(r.obtainTypedArray(R.array.skins).getDrawable(idx));
+		}
+	}
+	
+	private void setPlayerTiles()
+	{
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+		int val = settings.getInt("uniform", 256);
+		
+		
+		Resources r = getBaseContext().getResources();
+		Drawable home = r.obtainTypedArray(R.array.home_uniform).getDrawable(val&0xff);
+		Drawable visitor = r.obtainTypedArray(R.array.visitor_uniform).getDrawable((val>>8)&0xff);
+		
+		mFieldView.resetTiles(6);
+		mFieldView.loadTile(HOME_LEFT, home);
+		mFieldView.loadTileFlipped(HOME_RIGHT, home);
+		mFieldView.loadTile(VISITOR_LEFT, visitor);
+		mFieldView.loadTileFlipped(VISITOR_RIGHT, visitor);
+		mFieldView.loadTile(FOOTBALL, r.getDrawable(R.drawable.football));
+	}
 
 	/**
 	 * Called when Activity is first created. Turns off the title bar, sets up
@@ -305,6 +349,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	    mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 	    
 		setContentView(R.layout.hhfootball_layout);
+	
 		
 		mFieldView = (FieldView)findViewById(R.id.hhfootballview);		
 		mClockView=(TextView)findViewById(R.id.scoreboard_clock);
@@ -318,20 +363,80 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 											AnimationUtils.loadAnimation(this, R.anim.scroll_in),
 											AnimationUtils.loadAnimation(this, R.anim.scroll_out));
 		
+		// Set up the button handlers
+		findViewById(R.id.kick_button).setOnTouchListener( new OnTouchListener (){
+		        public boolean onTouch(View v, MotionEvent event) {
+		            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+		                Game.this.onKick(v);
+		            }
+		            return false;
+		        }
+
+		});
 		
+		findViewById(R.id.pass_button).setOnTouchListener( new OnTouchListener (){
+	        public boolean onTouch(View v, MotionEvent event) {
+	            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+	                Game.this.onPass(v);
+	            }
+	            return false;
+	        }
+
+		});
+		
+		findViewById(R.id.left_button).setOnTouchListener( new OnTouchListener (){
+	        public boolean onTouch(View v, MotionEvent event) {
+	            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+	                Game.this.onLeft(v);
+	            }
+	            return false;
+	        }
+
+		});
+		
+		findViewById(R.id.right_button).setOnTouchListener( new OnTouchListener (){
+	        public boolean onTouch(View v, MotionEvent event) {
+	            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+	                Game.this.onRight(v);
+	            }
+	            return false;
+	        }
+
+		});
+		
+		findViewById(R.id.up_button).setOnTouchListener( new OnTouchListener (){
+	        public boolean onTouch(View v, MotionEvent event) {
+	            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+	                Game.this.onUp(v);
+	            }
+	            return false;
+	        }
+
+		});
+		
+		findViewById(R.id.down_button).setOnTouchListener( new OnTouchListener (){
+	        public boolean onTouch(View v, MotionEvent event) {
+	            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+	                Game.this.onDown(v);
+	            }
+	            return false;
+	        }
+
+		});
+		
+		setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		mSoundManager=new SoundManager(this);
 		
 		// Get the current settings values
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
 		mSoundManager.setMute(settings.getBoolean("sound", true) == false);
 		mVibrate=settings.getBoolean("vibrate", mVibrate);
-		mPeriodLengthMins=Integer.parseInt(settings.getString("period_length", 
-											String.valueOf(mPeriodLengthMins)));
+		mPeriodLengthMins=Integer.parseInt(settings.getString("period_length", String.valueOf(mPeriodLengthMins)));
 		mDifficulty = Difficulty.valueOf(settings.getString("difficulty", mDifficulty.name()));
+		setGameSkin();
 		
 		settings.registerOnSharedPreferenceChangeListener(this);
-		
-		
+
 	}
 	
 	/* (non-Javadoc)
@@ -344,16 +449,11 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		Resources r = getBaseContext().getResources();
 
 		mFieldView.setFieldBackground(r.getDrawable(R.drawable.field));
-		mFieldView.setEndZoneBackground(r.getDrawable(R.drawable.home_endzone),
-										r.getDrawable(R.drawable.home_endzone) );
+		mFieldView.setEndZoneBackground(r.getDrawable(R.drawable.endzone),
+										r.getDrawable(R.drawable.endzone) );
 		
-		mFieldView.resetTiles(6);
-		mFieldView.loadTile(HOME_LEFT, r.getDrawable(R.drawable.home_left));
-		mFieldView.loadTile(HOME_RIGHT, r.getDrawable(R.drawable.home_right));
-		mFieldView.loadTile(VISITOR_LEFT, r.getDrawable(R.drawable.visitor_left));
-		mFieldView.loadTile(VISITOR_RIGHT, r.getDrawable(R.drawable.visitor_right));
-		mFieldView.loadTile(FOOTBALL, r.getDrawable(R.drawable.football));
-				
+		setPlayerTiles();
+	
 		if (savedInstanceState != null)
 		{
 			// We are being restored
@@ -402,6 +502,8 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		{
 			case GAME_OVER:
 				mInfoView.setText(getString(R.string.info_game_over));
+				updateDriveStatus();
+				updateScoreBoard();
 				return;			
 			case KICK:
 				mGameClock.start();
@@ -461,6 +563,15 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		{
 			mDifficulty = Difficulty.valueOf(settings.getString("difficulty", mDifficulty.name()));
 		}
+		else if (key.equals("skin"))
+		{
+			setGameSkin();
+		}
+		
+		else if (key.equals("uniform"))
+		{
+			setPlayerTiles();
+		}
 		
 	}
 	
@@ -492,6 +603,11 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		{
 			case GAME_OVER:
 				mSoundManager.release();
+				break;
+			case PLAY_DEAD:
+				initAudio();
+				mSoundManager.playSfx(AUDIO_CROWD,true);
+				initPreSnap();
 				break;
 			default:
 				initAudio();
@@ -539,8 +655,10 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mGameClock = new GameClock(mPeriodLengthMins,this);
 		mHomeScore=0;
 		mVisitorScore=0;
+		mInfoView.clear();
 		mGameState=GameState.KICKOFF;
-		initAudio();		
+		initAudio();	
+		mSoundManager.playSfx(AUDIO_CROWD,true);
 		mGameUpdater.start();
 		initPreSnap();
 	}
@@ -551,7 +669,6 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		handleNewPeriod();	
 		
 		mLineOfScrimmage=mFieldPos;
-		mInfoView.clearText();
 		
 		
 		switch (mGameState)
@@ -758,7 +875,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				
 			case TOUCHDOWN:
 				mSoundManager.playSfx(AUDIO_TOUCHDOWN,false);
-				mInfoView.setText(getString(R.string.info_touchdown));
+				mInfoView.setText(getString(R.string.info_touchdown),mInfoDuration);
 				mGameState=GameState.KICKOFF;
 				break;
 				
@@ -768,13 +885,13 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				break;
 				
 			case FIELD_GOAL_MAKE:
-				mInfoView.setText(getString(R.string.info_field_goal_make));
+				mInfoView.setText(getString(R.string.info_field_goal_make),mInfoDuration);
 				mGameState=GameState.KICKOFF;
 				break;
 				
 			case FIELD_GOAL_MISS:
 				mFieldPos=mLineOfScrimmage;
-				mInfoView.setText(getString(R.string.info_field_goal_miss));
+				mInfoView.setText(getString(R.string.info_field_goal_miss),mInfoDuration);
 				break;
 				
 			case INTERCEPTION:
@@ -832,20 +949,23 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				break;
 		}
 		
-		try {Thread.sleep(200);} 
-			catch (InterruptedException e) {}
-		
-		mSoundManager.playSfx(AUDIO_WHISTLE,false);
+		try{Thread.sleep(200);}
+			catch (InterruptedException e){}
+		mSoundManager.playSfx(AUDIO_WHISTLE,false); 
+				
 		switch (mGameClock.period())
 		{
 			case END_OF_FIRST_QUARTER:
 				mInfoView.setText(getString(R.string.info_end_of_first_quarter),mInfoDuration);
+				mHuddleTimer.start();
 				break;
 			case HALFTIME:
 				mInfoView.setText(getString(R.string.info_halftime),mInfoDuration);
+				mHuddleTimer.start();
 				break;
 			case END_OF_THIRD_QUARTER:
 				mInfoView.setText(getString(R.string.info_end_of_third_quarter),mInfoDuration);
+				mHuddleTimer.start();
 				break;
 			case GAME_OVER:
 				mState = State.GAME_OVER;
@@ -853,6 +973,9 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				mSoundManager.release();
 				mGameUpdater.stop();
 				break;
+				
+			default:
+				mHuddleTimer.start();
 		}
 	}
 	
@@ -1051,7 +1174,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 			return (mFieldPos <= 0);
 		}
 	}
-		
+	
 	private void moveBallCarrierLeft()
 	{
 		int newX=mOffense.quarterback().pos().x;
@@ -1277,28 +1400,18 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		switch (mState)
 		{
 			case PLAY_LIVE:
-				mState=State.PASS;	
-				mBallPos=new Coordinate(mOffense.quarterback().pos());
+				if (mGameState == GameState.DRIVE_IN_PROGRESS && 
+						ballAcrossLineOfScrimmage() == false )
+				{
+					mState=State.PASS;	
+					mBallPos=new Coordinate(mOffense.quarterback().pos());
+				}
 				break;
 			default:
 				return;
 		}
 	}
 	
-	public void onHuddle(View view)
-	{	
-		if (mKickMeter.isEnabled())
-			return;
-		
-		switch (mState)
-		{
-			case PLAY_DEAD:
-				initPreSnap();
-				break;
-			default:
-				return;
-		}
-	}
 	
 	public void onKick(View view)
 	{	
@@ -1429,7 +1542,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mBallPos.x=newX;	
 	}
 	
-	protected boolean OnUpdateGameAI()
+	protected boolean onUpdateGameAI()
 	{
 		switch (mState)
 		{

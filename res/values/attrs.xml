@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="preference_adapter">
+        <attr name="android:galleryItemBackground" />
+    </declare-styleable>
+    
+    <array name="skins">
+        <item>@drawable/skin_boyish</item>
+        <item>@drawable/skin_nint</item>
+        <item>@drawable/skin_field</item>
+    </array>
+    
+	<string-array name="skin_description">
+		<item>Boyish</item>
+		<item>Nintend</item>
+		<item>Field</item>
+	</string-array>	
+	
+	<array name="home_uniform">
+        <item>@drawable/home_scarlet_cream</item>
+        <item>@drawable/home_black_gold</item>
+        <item>@drawable/home_blue_orange</item>
+        <item>@drawable/home_cream_crimson</item>
+        <item>@drawable/home_black_oldgold</item>
+        <item>@drawable/home_maize_blue</item>
+        <item>@drawable/home_green_white</item>
+        <item>@drawable/home_maroon_gold</item>
+        <item>@drawable/home_purple_white</item> 
+        <item>@drawable/home_scarlet_gray</item> 
+        <item>@drawable/home_blue_white</item> 
+        <item>@drawable/home_oldgold_black</item>
+        <item>@drawable/home_cardinal_white</item>
+
+    </array>
+	
+	 <array name="visitor_uniform">
+        <item>@drawable/visitor_scarlet_cream</item>
+        <item>@drawable/visitor_black_gold</item>
+        <item>@drawable/visitor_blue_orange</item>
+        <item>@drawable/visitor_cream_crimson</item>
+        <item>@drawable/visitor_black_oldgold</item>
+        <item>@drawable/visitor_maize_blue</item>
+        <item>@drawable/visitor_green_white</item>
+        <item>@drawable/visitor_maroon_gold</item>
+        <item>@drawable/visitor_purple_white</item>
+        <item>@drawable/visitor_scarlet_gray</item> 
+        <item>@drawable/visitor_blue_white</item>
+ 		<item>@drawable/visitor_oldgold_black</item>
+ 		<item>@drawable/visitor_cardinal_white</item>
+    </array>
+    
+	<string-array name="uniform_description">
+		<item>Scarlet and Cream</item>
+		<item>Black and Gold</item>
+		<item>Blue and Orange</item>
+		<item>Cream and Crimson</item>
+		<item>Black and Old Gold</item>
+		<item>Maize and Blue</item>
+		<item>Green and White</item>
+		<item>Maroon and Gold</item>
+		<item>Purple and White</item>
+		<item>Scarlet and Gray</item>
+		<item>Blue and White</item>
+		<item>Old Gold and Black</item>
+		<item>Cardinal and White</item>
+	</string-array>	
+	
+</resources>
