@@ -3,6 +3,7 @@ package com.redpantssoft.hhfootball;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.Rect;
@@ -73,12 +74,54 @@ public class FieldView extends View
 	 * values a tile can have. These will be later be converted into scaled bitmaps that represent
 	 * the computed tilesize
 	 */
-	private Drawable[] mTileArray;
 	
-	/**
-	 * A hash that represents the scaled bitmaps the mTileArray field
-	 */
-	private Bitmap[] mTileBitmapArray;
+	class Tile extends Object
+	{
+		private Drawable mTile;
+		private Bitmap mBitmap;
+		private boolean mFlipped;
+		
+		public Tile(Drawable tile,boolean flipped)
+		{
+			mTile=tile;
+			mFlipped=flipped;
+		}
+		
+		/**
+		 * Generates a bitmap to fit into the field of play grid from the specified drawable. This
+		 * should be called when a new tile image is set and when the view gets resized
+		 * @param tile Drawable to draw into the bitmap
+		 * @return generated bitmap
+		 */
+		public void scaleTileBitmap(int tileSize, int fieldLineWidth)
+		{
+			mBitmap = Bitmap.createBitmap(tileSize - fieldLineWidth * 2,
+					tileSize - fieldLineWidth * 2, Bitmap.Config.ARGB_8888);
+			
+			Canvas canvas = new Canvas(mBitmap);
+			mTile.setBounds(0, 0, tileSize - fieldLineWidth * 2, tileSize- fieldLineWidth * 2);
+			mTile.draw(canvas);
+			
+			if (mFlipped)
+			{
+				// Create a new flipped bitmap by applying a transformation matrix 
+				//  to the existing bitmap
+				Matrix matrix = new Matrix();
+				matrix.preScale(-1, 1);
+				mBitmap = Bitmap.createBitmap(mBitmap, 0, 0, 
+											mBitmap.getWidth(), mBitmap.getHeight(), 
+											matrix, true);
+			}
+		}
+		
+		public Bitmap getScaledBitmap()
+		{
+			return mBitmap;
+		}
+	}
+	
+	private Tile[] mTileArray;
+	
 
 	/**
 	 * A two-dimensional array of integers in which the number represents the
@@ -155,7 +198,7 @@ public class FieldView extends View
 		 * rectangles are computed. These rectangle coordinates are relative to the 
 		 * top level view rectangle, mViewRect.
 		 */
-		mHomeEndzoneRect = new Rect(0, 0, mTileSize / 2, mViewRect.height() - 1);
+		mHomeEndzoneRect = new Rect(1, 0, mTileSize / 2, mViewRect.height() - 1);
 		mFieldRect = new Rect(mHomeEndzoneRect.right, 0, mHomeEndzoneRect.right
 				+ (mXTileCount * mTileSize), mViewRect.height() - 1);
 		mVistorEndzoneRect = new Rect(mFieldRect.right, 0, mFieldRect.right
@@ -165,12 +208,10 @@ public class FieldView extends View
 		 * Now draw the field into mFieldBitmap. 
 		 */
 		drawFieldBitmap();
-		for (int i = 0; i < mTileBitmapArray.length; i++)
+		for (int i = 0; i < mTileArray.length; i++)
 		{
-			if (mTileBitmapArray[i] != null)
-			{
-				mTileBitmapArray[i] = scaleTileBitmap(mTileArray[i]);
-			}
+			if (mTileArray[i] != null)
+				mTileArray[i].scaleTileBitmap(mTileSize,mFieldLineWidth);
 		}
 		clearTiles();
 		
@@ -195,7 +236,7 @@ public class FieldView extends View
 			{
 				if (mTileGrid[x][y] > 0)
 				{
-					canvas.drawBitmap(mTileBitmapArray[mTileGrid[x][y]],
+					canvas.drawBitmap(mTileArray[mTileGrid[x][y]].getScaledBitmap(),
 							mViewRect.left+mFieldRect.left + (x * mTileSize)+mFieldLineWidth,
 							mViewRect.top+mFieldRect.top + (y * mTileSize)+mFieldLineWidth, mPaint);
 				}
@@ -283,55 +324,39 @@ public class FieldView extends View
 			paint.setARGB(255, 255, 0, 0);
 			paint.setStyle(Style.FILL);
 			canvas.drawRect(rect, paint);
-			
-			paint.setARGB(255, 255, 255, 255);
-			paint.setStrokeWidth(mFieldLineWidth);
-			paint.setStyle(Style.STROKE);
-			canvas.drawRect(rect, paint);
-
-			int linecnt = rect.height() / rect.width();
-			if (linecnt > 0)
-			{
-				for (int y = 0; y < linecnt; y++)
-				{
-					canvas.drawLine(rect.left, y * rect.width(),
-							rect.left + rect.width(),
-							y * rect.width() + rect.width(), paint);
-				}
-			}
 		}
 		else
 		{
 			background.setBounds(rect);
 			background.draw(canvas);
-			
-			paint.setARGB(255, 255, 255, 255);
-			paint.setStrokeWidth(mFieldLineWidth);
-			paint.setStyle(Style.STROKE);
-			canvas.drawRect(rect, paint);
 		}
-	}
+		
+		paint.setARGB(255, 255, 255, 255);
+		paint.setStrokeWidth(mFieldLineWidth);
+		paint.setStyle(Style.STROKE);
+		canvas.drawRect(rect, paint);
 
-	/**
-	 * Generates a bitmap to fit into the field of play grid from the specified drawable. This
-	 * should be called when a new tile image is set and when the view gets resized
-	 * @param tile Drawable to draw into the bitmap
-	 * @return generated bitmap
-	 */
-	private Bitmap scaleTileBitmap(Drawable tile)
-	{
-		Bitmap bitmap = Bitmap.createBitmap(mTileSize - mFieldLineWidth * 2,
-				mTileSize - mFieldLineWidth * 2, Bitmap.Config.ARGB_8888);
-		Canvas canvas = new Canvas(bitmap);
-		tile.setBounds(0, 0, mTileSize - mFieldLineWidth * 2, mTileSize
-				- mFieldLineWidth * 2);
-		tile.draw(canvas);
-		return bitmap;
+		int linecnt = rect.height() / rect.width();
+		if (linecnt > 0)
+		{
+			for (int y = 0; y < linecnt; y++)
+			{
+				canvas.drawLine(rect.left, y * rect.width(),
+						rect.left + rect.width(),
+						y * rect.width() + rect.width(), paint);
+			}
+		}
 	}
 
 	public void setFieldBackground(Drawable drawable)
 	{
 		mFieldBackground=drawable;
+	}
+	
+	public void setEndZoneBackground(Drawable endZone )
+	{
+		mHomeEndzoneBackground=endZone;
+		mVisitorEndzoneBackground=endZone;
 	}
 	
 	public void setEndZoneBackground(Drawable homeEndZone, Drawable visitorEndZone)
@@ -349,8 +374,16 @@ public class FieldView extends View
 	 */
 	public void loadTile(int key, Drawable tile)
 	{
-		mTileArray[key] = tile;
-		mTileBitmapArray[key] = scaleTileBitmap(tile);
+		Tile t = new Tile(tile,false);
+		t.scaleTileBitmap(mTileSize, mFieldLineWidth);
+		mTileArray[key]=t;
+	}
+	
+	public void loadTileFlipped(int key, Drawable tile)
+	{
+		Tile t = new Tile(tile,true);
+		t.scaleTileBitmap(mTileSize, mFieldLineWidth);
+		mTileArray[key]=t;
 	}
 
 	/**
@@ -393,8 +426,7 @@ public class FieldView extends View
 
 	public void resetTiles(int tilecount)
 	{
-		mTileArray = new Drawable[tilecount];
-		mTileBitmapArray = new Bitmap[tilecount];
+		mTileArray = new Tile[tilecount];
 	}
 	
 	/**

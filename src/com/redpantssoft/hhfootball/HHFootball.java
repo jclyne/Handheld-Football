@@ -6,6 +6,7 @@ import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.View;
@@ -35,6 +36,8 @@ public class HHFootball extends Activity implements DialogInterface.OnClickListe
 		
 		ImageView title = new ImageView(this);
 		title.setImageResource(R.drawable.splash_about_normal);
+		
+		setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		mAboutDialog = new AlertDialog.Builder(this) 
 				.setCustomTitle(title)
 				.setItems(R.array.about_items, this)

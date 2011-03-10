@@ -52,6 +52,7 @@
 	<string name="info_end_of_third_quarter">End of 3rd Quarter</string>
 	<string name="info_game_over">Game Over</string>
 	<string name="settings_title">HandHeld Football Settings</string>
+	<string name="game_settings">Game Settings</string>
 	<string name="setting_sound">Game Sounds</string>
 	<string name="setting_sound_summary_on">Disable if you don\'t want game sounds</string>
 	<string name="setting_sound_summary_off">Enable to hear game sounds</string>
@@ -98,6 +99,13 @@
 		<item>How To Play</item>
 		<item>Contact Developer</item>
 	</string-array>
+	<string name="customization_settings">Customization Settings</string>
+	<string name="uniform_chooser_setting_title">Uniforms</string>
+	<string name="uniform_chooser_setting_summary">Select uniform colors</string>
+	<string name="uniform_chooser_title">Select uniform colors</string>
+	<string name="skin_chooser_setting_title">Skins</string>
+	<string name="skin_chooser_setting_summary">Select a game skin</string>
+	<string name="skin_chooser_title">Select a game skin</string>
 	<string name="dev_email_address">jeffclyne@mindless.com</string>
 	<string name="dev_email_subject">HandHeld Football Feedback</string>
 	<string name="dev_email_error_title">Error</string>

@@ -16,7 +16,6 @@
 	<style name="scoreboard_label">
 		<item name="android:textSize">12sp</item>
 		<item name="android:gravity">center</item>
-		<item name="android:typeface">serif</item>
 		<item name="android:textStyle">bold</item>
 	</style>
 	
@@ -35,7 +34,6 @@
 	<style name="scoreboard_label_land">
 		<item name="android:textSize">14sp</item>
 		<item name="android:gravity">center</item>
-		<item name="android:typeface">serif</item>
 		<item name="android:textStyle">bold</item>
 	</style>
 	

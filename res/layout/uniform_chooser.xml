@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:weightSum="1.0"
+	android:orientation="vertical">
+	
+	<LinearLayout
+		android:layout_weight="0.5"
+		android:layout_width="fill_parent"
+		android:layout_height="0dip" 
+		android:weightSum="1.0"
+		android:orientation="vertical">
+	
+		<TextView
+		    android:layout_weight="0.1"
+		    android:layout_width="fill_parent"
+		    android:layout_height="wrap_content"
+		    android:layout_marginLeft="5dip"
+		    android:text="Home Team"
+		    android:textSize="16sp"
+		    android:textStyle="bold"
+		    android:gravity="left"/>
+   
+		<Gallery
+		    android:id="@+id/home_uniform_gallery"
+		    android:layout_weight="0.8"
+		    android:layout_width="fill_parent"
+		    android:layout_height="0dip"/>
+		
+		<TextView
+		    android:id="@+id/home_uniform_description"
+		    android:layout_weight="0.1"
+		    android:layout_width="fill_parent"
+		    android:layout_height="wrap_content"
+		    android:text=" "
+		    android:textSize="12sp"
+		    android:gravity="center_horizontal"/>
+		
+	</LinearLayout>
+	
+	<LinearLayout
+		android:layout_weight="0.5"
+		android:layout_width="fill_parent"
+		android:layout_height="0dip" 
+		android:weightSum="1.0"
+		android:orientation="vertical">
+	
+		<TextView
+		    android:layout_weight="0.1"
+		    android:layout_width="fill_parent"
+		    android:layout_height="wrap_content"
+		    android:layout_marginLeft="5dip"
+		    android:text="Visiting Team"
+		    android:textSize="16sp"
+		    android:textStyle="bold"
+		    android:gravity="left"/>
+		    
+		<Gallery
+		    android:id="@+id/visitor_uniform_gallery"
+		    android:layout_weight="0.8"
+		    android:layout_width="fill_parent"
+		    android:layout_height="0dip"/>
+		
+		<TextView
+		    android:id="@+id/visitor_uniform_description"
+		    android:layout_weight="0.1"
+		    android:layout_width="fill_parent"
+		    android:layout_height="wrap_content"
+		    android:text=" "
+		    android:textSize="12sp"
+		    android:gravity="center_horizontal"/>
+		
+	</LinearLayout>
+	
+</LinearLayout>

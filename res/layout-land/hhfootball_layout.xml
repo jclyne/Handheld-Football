@@ -1,227 +1,233 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:id="@+id/LinearLayout01"
+	android:id="@+id/game_layout"
 	android:layout_width="fill_parent" 
 	android:layout_height="fill_parent"
-	android:orientation="vertical"
-	android:background="@drawable/field_background">
+	android:orientation="vertical">
 	
-	<TableLayout
-		android:id="@+id/scoreboard"
-		android:layout_width="fill_parent"
+	<LinearLayout 
+		android:layout_marginTop="13dip"
+		android:layout_marginLeft="22dip"
+		android:layout_marginRight="22dip"
+		android:layout_width="fill_parent" 
 		android:layout_height="wrap_content"
-		android:layout_marginBottom="10dip">
-		
-		<TableRow>
-			<TextView
-				style="@style/scoreboard_label_land"
-				android:layout_weight="25"
-				android:text="@string/scoreboard_home"/>
-			
-			<TextView
-				style="@style/scoreboard_label_land"
-				android:layout_weight="45"
-				android:text="@string/scoreboard_clock"/>
-				
-			<TextView
-				style="@style/scoreboard_label_land"
-				android:layout_weight="5"
-				android:text="@string/scoreboard_period"/>
-		
-			<TextView
-				style="@style/scoreboard_label_land"
-				android:layout_weight="25"
-				android:text="@string/scoreboard_visitor"/>
-		</TableRow>
-		
-		<TableRow>
-			<TextView
-				android:id="@+id/scoreboard_home"
-				android:layout_weight="25"
-				style="@style/scoreboard_land"
-				android:text="0"/>
-			
-			<TextView
-				android:id="@+id/scoreboard_clock"
-				android:layout_weight="45"
-				style="@style/scoreboard_land"
-				android:text="00:00.0"/>
-			
-			<TextView
-				android:id="@+id/scoreboard_period"
-				android:layout_weight="5"
-				style="@style/scoreboard_land"
-				android:text="1"/>
-				
-			<TextView
-				android:id="@+id/scoreboard_visitor"
-				android:layout_weight="25"
-				style="@style/scoreboard_land"
-				android:text="0"/>
-		</TableRow>>
+		android:orientation="vertical">
 	
-	</TableLayout>
-	
-	<FrameLayout
-		android:layout_width="fill_parent"
-        android:layout_height="118dip">
-        
-		<com.redpantssoft.hhfootball.FieldView
-		 	android:id="@+id/hhfootballview"
+		<TableLayout
+			android:id="@+id/scoreboard"
 			android:layout_width="fill_parent"
-	        android:layout_height="fill_parent"/> 
-	        
-        <TextView
-	    	android:id="@+id/info_view"
-	    	android:layout_width="fill_parent"
-			android:layout_height="fill_parent"
-			style="@style/info_land"/>
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="2dip">
 			
-	</FrameLayout>
+			<TableRow>
+				<TextView
+					style="@style/scoreboard_label_land"
+					android:layout_weight="25"
+					android:text="@string/scoreboard_home"/>
+				
+				<TextView
+					style="@style/scoreboard_label_land"
+					android:layout_weight="40"
+					android:text="@string/scoreboard_clock"/>
+					
+				<TextView
+					style="@style/scoreboard_label_land"
+					android:layout_weight="5"
+					android:text="@string/scoreboard_period"/>
+			
+				<TextView
+					style="@style/scoreboard_label_land"
+					android:layout_weight="25"
+					android:text="@string/scoreboard_visitor"/>
+			</TableRow>
+			
+			<TableRow>
+				<TextView
+					android:id="@+id/scoreboard_home"
+					android:layout_weight="25"
+					style="@style/scoreboard_land"
+					android:text="0"/>
+				
+				<TextView
+					android:id="@+id/scoreboard_clock"
+					android:layout_weight="40"
+					style="@style/scoreboard_land"
+					android:text="00:00.0"/>
+				
+				<TextView
+					android:id="@+id/scoreboard_period"
+					android:layout_weight="5"
+					style="@style/scoreboard_land"
+					android:text="1"/>
+					
+				<TextView
+					android:id="@+id/scoreboard_visitor"
+					android:layout_weight="25"
+					style="@style/scoreboard_land"
+					android:text="0"/>
+			</TableRow>>
 		
-	<FrameLayout
-		android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:paddingBottom="5dip">
-        
-        <com.redpantssoft.hhfootball.KickMeter
-		 	android:id="@+id/kick_meter"
+		</TableLayout>
+		
+		<FrameLayout
+			android:layout_width="fill_parent"
+	        android:layout_height="118dip">
+	        
+			<com.redpantssoft.hhfootball.FieldView
+			 	android:id="@+id/hhfootballview"
+				android:layout_width="fill_parent"
+		        android:layout_height="fill_parent"/> 
+		        
+	        <TextView
+		    	android:id="@+id/info_view"
+		    	android:layout_width="fill_parent"
+				android:layout_height="fill_parent"
+				style="@style/info_land"/>
+				
+		</FrameLayout>
+			
+		<FrameLayout
 			android:layout_width="fill_parent"
 	        android:layout_height="wrap_content"
-	        android:layout_gravity="bottom"
-	        android:visibility="gone"
-	        android:progressDrawable="@drawable/kick_meter"
-	        style="?android:attr/progressBarStyleHorizontal"
-	        android:max="100" />
+	        android:paddingBottom="5dip">
 	        
-		<LinearLayout
-			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			android:weightSum="1.0">
-			
+	        <com.redpantssoft.hhfootball.KickMeter
+			 	android:id="@+id/kick_meter"
+				android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:layout_gravity="bottom"
+		        android:layout_marginLeft="20dip"
+				android:layout_marginRight="20dip"
+		        android:visibility="gone"
+		        android:progressDrawable="@drawable/kick_meter"
+		        style="?android:attr/progressBarStyleHorizontal"
+		        android:max="100" />
+		        
 			<LinearLayout
-				android:layout_width="0dip"
+				android:layout_width="fill_parent"
 				android:layout_height="wrap_content"
-				android:gravity="center"
-				android:layout_weight="0.4">
+				android:weightSum="1.0">
 				
-				<TextView
-			    	android:layout_width="wrap_content"
+				<LinearLayout
+					android:layout_width="0dip"
 					android:layout_height="wrap_content"
-					android:text=""
-					style="@style/status_label_land"/>
+					android:gravity="center"
+					android:layout_weight="0.4">
 					
-			    <TextView
-			    	android:id="@+id/drive_view"
-			    	android:layout_width="wrap_content"
+					<TextView
+				    	android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text=""
+						style="@style/status_label_land"/>
+						
+				    <TextView
+				    	android:id="@+id/drive_view"
+				    	android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						style="@style/status_land"/>
+						
+				</LinearLayout>
+				
+				<LinearLayout
+					android:layout_width="0dip"
 					android:layout_height="wrap_content"
-					style="@style/status_land"/>
+					android:gravity="center"
+					android:layout_weight="0.6">
 					
+					<TextView
+				    	android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="BALL ON"
+						style="@style/status_label_land"/>
+						
+				    <TextView
+				    	android:id="@+id/fieldpos_view"
+				    	android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						style="@style/status_land"/>
+						
+				</LinearLayout>
+				
 			</LinearLayout>
 			
-			<LinearLayout
-				android:layout_width="0dip"
-				android:layout_height="wrap_content"
-				android:gravity="center"
-				android:layout_weight="0.6">
-				
-				<TextView
-			    	android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:text="BALL ON"
-					style="@style/status_label_land"/>
-					
-			    <TextView
-			    	android:id="@+id/fieldpos_view"
-			    	android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					style="@style/status_land"/>
-					
-			</LinearLayout>
-			
-		</LinearLayout>
-		
-    </FrameLayout>
+	    </FrameLayout>
+	    
+    </LinearLayout>
     
     <RelativeLayout
+    	android:id="@+id/button_layout"
 		android:layout_width="fill_parent"
-		android:layout_height="wrap_content"	
+		android:layout_height="fill_parent"	
+		android:layout_marginTop="13dip"
 		android:layout_marginLeft="10dip"
 		android:layout_marginRight="10dip"
-		android:gravity="center_vertical">
-			
-		<Button
-			android:id="@+id/huddle_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			style="@style/button"
-			android:text="HUDDLE"
-			android:onClick="onHuddle"
-			android:background="@drawable/controller_button"
-			android:layout_alignParentTop="true"/>
+		android:layout_marginBottom="5dip">
 				
 		<Button
 			android:id="@+id/kick_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
+			android:layout_width="60dip"
+			android:layout_height="60dip"
 			style="@style/button"
 			android:text="KICK"
-			android:onClick="onKick"
 			android:background="@drawable/controller_button"
-			android:layout_alignParentBottom="true"/>
-			
+			android:layout_centerVertical="true"/>
+				
 		<Button
 			android:id="@+id/pass_button"
-			android:layout_width="70dip"
-			android:layout_height="70dip"
+			android:layout_width="60dip"
+			android:layout_height="60dip"
 			style="@style/button"
 			android:text="PASS"
-			android:onClick="onPass"
 			android:background="@drawable/controller_button"
-			android:layout_toRightOf="@+id/huddle_button"
-			android:layout_centerVertical="true"/>
+			android:layout_marginLeft="20dip"
+			android:layout_toRightOf="@+id/kick_button"
+			android:layout_alignTop="@+id/kick_button"/>
 			
 		<Button
 			android:id="@+id/right_button"
-			android:layout_width="70dip"
-			android:layout_height="70dip"
-			style="@style/button"
-			android:onClick="onRight"
+			android:layout_width="35dip"
+			android:layout_height="45dip"
 			android:background="@drawable/right_button"
+			android:layout_centerVertical="true"
 			android:layout_alignParentRight="true"
-			android:layout_centerVertical="true"/>
+			android:layout_marginRight="20dip"/>
+			
+		<Button
+			android:id="@+id/center_button"
+			android:clickable="false"
+			android:focusable="false"
+			android:layout_width="45dip"
+			android:layout_height="45dip"
+			android:background="@drawable/center_button"
+			android:layout_toLeftOf="@+id/right_button"
+			android:layout_alignTop="@+id/right_button"/>
 			
 		<Button
 			android:id="@+id/up_button"
-			android:layout_width="60dip"
-			android:layout_height="60dip"
-			style="@style/button"
-			android:onClick="onUp"
+			android:layout_width="45dip"
+			android:layout_height="35dip"
 			android:background="@drawable/up_button"
-			android:layout_toLeftOf="@+id/right_button"
-			android:layout_alignParentTop="true"/>
+			android:layout_above="@+id/center_button"
+			android:layout_alignRight="@+id/center_button"/>
 			
-		<Button
-			android:id="@+id/down_button"
-			android:layout_width="60dip"
-			android:layout_height="60dip"
-			style="@style/button"
-			android:onClick="onDown"
-			android:background="@drawable/down_button"
-			android:layout_toLeftOf="@+id/right_button"
-			android:layout_alignParentBottom="true"/>
 
 		<Button
+			android:id="@+id/down_button"
+			android:layout_width="45dip"
+			android:layout_height="35dip"
+			android:background="@drawable/down_button"
+			android:layout_below="@+id/center_button"
+			android:layout_alignRight="@+id/center_button"/>
+			
+		<Button
 			android:id="@+id/left_button"
-			android:layout_width="70dip"
-			android:layout_height="70dip"
-			style="@style/button"
-			android:onClick="onLeft"
+			android:layout_width="35dip"
+			android:layout_height="45dip"
 			android:background="@drawable/left_button"
-			android:layout_toLeftOf="@+id/down_button"
-			android:layout_centerVertical="true"/>
+			android:layout_toLeftOf="@+id/center_button"
+			android:layout_alignTop="@+id/center_button"/>
 		
-	</RelativeLayout>>	
+	</RelativeLayout>
 	
 </LinearLayout>

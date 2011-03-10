@@ -13,6 +13,8 @@ public class TextViewAnimator implements Animation.AnimationListener,Timer.Timer
 	Animation mInAnim;
 	Animation mOutAnim;
 	
+	boolean mActive=false;
+	
 	Timer mTimer;
 	
 	class TextDisplay
@@ -60,6 +62,8 @@ public class TextViewAnimator implements Animation.AnimationListener,Timer.Timer
 				mTextView.startAnimation(mInAnim);
 				mTextView.invalidate();
 			}
+			else
+				mActive=false;
 		}
 	}
 
@@ -89,15 +93,23 @@ public class TextViewAnimator implements Animation.AnimationListener,Timer.Timer
 	public void setText(String text) 
 	{
 		mTextQueue.add(new TextDisplay(text,0));
-		mTextView.startAnimation(mInAnim);
-		mTextView.invalidate();
+		if (!mActive)
+		{
+			mActive=true;
+			mTextView.startAnimation(mInAnim);
+			mTextView.invalidate();
+		}
 	}
 	
 	public void setText(String text,int millis) 
 	{
 		mTextQueue.add(new TextDisplay(text,millis));
-		mTextView.startAnimation(mInAnim);
-		mTextView.invalidate();
+		if (!mActive)
+		{
+			mActive=true;
+			mTextView.startAnimation(mInAnim);
+			mTextView.invalidate();
+		}
 	}
 	
 	public void clearText() 
