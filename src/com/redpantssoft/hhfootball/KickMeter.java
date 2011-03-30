@@ -1,6 +1,11 @@
 package com.redpantssoft.hhfootball;
 
 import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Paint.Style;
 import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -16,24 +21,39 @@ public class KickMeter extends ProgressBar implements Runnable
 	private boolean enabled;
 	private Thread mThread;
 	
+	Paint mBorderPaint;
+	
 	public KickMeter(Context context, AttributeSet attrs, int defStyle)
 	{
 		super(context, attrs, defStyle);
-		enabled=false;
+		
+		enabled=false;		
+		initializeBorder(attrs);
 	}
 
 	public KickMeter(Context context, AttributeSet attrs)
 	{
 		super(context, attrs);
+		
 		enabled=false;
+		initializeBorder(attrs);
 	}
 
-	public KickMeter(Context context)
-	{
-		super(context);
-		enabled=false;
-	}
 	
+	private void initializeBorder(AttributeSet attrs)
+	{
+		mBorderPaint = new Paint();
+		
+		TypedArray a = getContext().obtainStyledAttributes(attrs,R.styleable.KickMeter);
+	    
+        Log.i(TAG,"Color: "+a.getColor(R.styleable.KickMeter_borderColor, Color.WHITE));
+		mBorderPaint.setColor(a.getColor(R.styleable.KickMeter_borderColor, Color.WHITE));
+		Log.i(TAG,"Size: "+a.getInt(R.styleable.KickMeter_borderSize, 0));
+		mBorderPaint.setStrokeWidth(a.getInt(R.styleable.KickMeter_borderSize, 0));
+		mBorderPaint.setStyle(Style.STROKE);
+		
+		a.recycle();
+	}
 	
 	public Bundle serialize()
 	{
@@ -157,5 +177,14 @@ public class KickMeter extends ProgressBar implements Runnable
 				}
 			}
 		}
+	}
+	
+
+	@Override
+	protected synchronized void onDraw(Canvas canvas)
+	{
+		super.onDraw(canvas);
+		canvas.drawRect(0,0,getWidth()-1,getHeight()-1, mBorderPaint);
+
 	}
 }

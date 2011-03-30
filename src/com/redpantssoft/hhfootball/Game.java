@@ -657,6 +657,9 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mVisitorScore=0;
 		mInfoView.clear();
 		mGameState=GameState.KICKOFF;
+		updateScoreBoard();
+		updateDriveStatus();
+		
 		initAudio();	
 		mSoundManager.playSfx(AUDIO_CROWD,true);
 		mGameUpdater.start();

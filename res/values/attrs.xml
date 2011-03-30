@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+	<declare-styleable name="KickMeter">
+        <attr name="borderColor" format="integer" />
+        <attr name="borderSize" format="integer" />
+    </declare-styleable>
+    
     <declare-styleable name="preference_adapter">
         <attr name="android:galleryItemBackground" />
     </declare-styleable>
+    
+    
     
     <array name="skins">
         <item>@drawable/skin_boyish</item>

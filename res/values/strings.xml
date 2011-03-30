@@ -106,7 +106,7 @@
 	<string name="skin_chooser_setting_title">Skins</string>
 	<string name="skin_chooser_setting_summary">Select a game skin</string>
 	<string name="skin_chooser_title">Select a game skin</string>
-	<string name="dev_email_address">jeffclyne@mindless.com</string>
+	<string name="dev_email_address">redpantssoft@gmail.com</string>
 	<string name="dev_email_subject">HandHeld Football Feedback</string>
 	<string name="dev_email_error_title">Error</string>
 	<string name="dev_email_error_msg">No email application found!</string>

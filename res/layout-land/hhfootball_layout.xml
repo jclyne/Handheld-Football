@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res/com.redpantssoft.hhfootball"
 	android:id="@+id/game_layout"
 	android:layout_width="fill_parent" 
 	android:layout_height="fill_parent"
@@ -99,6 +100,8 @@
 		        android:layout_gravity="bottom"
 		        android:layout_marginLeft="20dip"
 				android:layout_marginRight="20dip"
+				app:borderColor="@android:color/white"
+		        app:borderSize="3"
 		        android:visibility="gone"
 		        android:progressDrawable="@drawable/kick_meter"
 		        style="?android:attr/progressBarStyleHorizontal"
