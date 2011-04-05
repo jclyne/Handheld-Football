@@ -1,4 +1,5 @@
 .project
 .classpath
+.idea
 gen/
 bin/
