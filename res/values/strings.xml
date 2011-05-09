@@ -97,7 +97,8 @@
 	<string name="setting_difficulty_dialog_title">Select a difficulty level</string>
 	<string-array name="about_items">
 		<item>How To Play</item>
-		<item>Contact Developer</item>
+        <item>Website</item>
+		<item>Email Developer</item>
 	</string-array>
 	<string name="customization_settings">Customization Settings</string>
 	<string name="uniform_chooser_setting_title">Uniforms</string>
@@ -106,6 +107,9 @@
 	<string name="skin_chooser_setting_title">Skins</string>
 	<string name="skin_chooser_setting_summary">Select a game skin</string>
 	<string name="skin_chooser_title">Select a game skin</string>
+    <string name="dev_website_url">http://www.facebook.com/RedPantsSoftware</string>
+    <string name="dev_website_error_title">Error</string>
+	<string name="dev_website_error_msg">No browser application found!</string>
 	<string name="dev_email_address">redpantssoft@gmail.com</string>
 	<string name="dev_email_subject">HandHeld Football Feedback</string>
 	<string name="dev_email_error_title">Error</string>
