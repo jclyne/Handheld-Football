@@ -112,8 +112,7 @@
 	<string name="dev_email_error_msg">No email application found!</string>
 	<string name="instructions">HandHeld Football is a new take on the classic electronic sports games of the \'70s and \'80s. 
 	The computer controls the defense, you control the offense.\n\nKicking - The kick power meter indicates the kick power. Press 
-	KICK, when the meter is active, to kick with the desired level.\n\nPress HUDDLE when a play is dead to reset the formation.\n\nYou 
-	initially control the quarterback. Move the quarterback backwards to snap the ball. Once the ball is snapped, the defense and your receiver
+	KICK, when the meter is active, to kick with the desired level.\n\nMove the quarterback backwards to snap the ball. Once the ball is snapped, the defense and your receiver
 	will become active.\n\nPress PASS to throw a pass to your receiver. You can safely throw the ball over the head of defenders
 	that are in the backfield. Otherwise, they will intercept the ball.\n\nPress the KICK button at the line of scrimmage to bring
 	up the kick meter and attempt a field goal. The chance of making a field goal goes up with attempts from shorter distances, as
