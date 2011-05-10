@@ -272,30 +272,30 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 					.setTitle(R.string.menu_new_game)
 					.setMessage(R.string.confirm_exit_game)
 					.setNegativeButton(R.string.confirm_no, new DialogInterface.OnClickListener() {
-				           public void onClick(DialogInterface dialog, int id) {
-				        	   dialog.cancel();
-				           }
-				     })
+                        public void onClick(DialogInterface dialog, int id) {
+                            dialog.cancel();
+                        }
+                    })
 					.setPositiveButton(R.string.confirm_yes, new DialogInterface.OnClickListener() {
-				           public void onClick(DialogInterface dialog, int id) {
-				        	   startNewGame();
-				           }
-				     }) .create();
+                        public void onClick(DialogInterface dialog, int id) {
+                            startNewGame();
+                        }
+                    }) .create();
 				
 			case MENU_QUIT:
 				return new AlertDialog.Builder(this) 
 					.setTitle(R.string.menu_quit)
 					.setMessage(R.string.confirm_exit_game)
 					.setNegativeButton(R.string.confirm_no, new DialogInterface.OnClickListener() {
-				           public void onClick(DialogInterface dialog, int id) {
-				        	   dialog.cancel();
-				           }
-				     })
+                        public void onClick(DialogInterface dialog, int id) {
+                            dialog.cancel();
+                        }
+                    })
 					.setPositiveButton(R.string.confirm_yes, new DialogInterface.OnClickListener() {
-				           public void onClick(DialogInterface dialog, int id) {
-				        	   Game.this.finish();
-				           }
-				     }) .create();
+                        public void onClick(DialogInterface dialog, int id) {
+                            Game.this.finish();
+                        }
+                    }) .create();
 				
 		}
 		return super.onCreateDialog(id);
@@ -348,7 +348,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 
 	    mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 	    
-		setContentView(R.layout.hhfootball_layout);
+		setContentView(R.layout.game_layout);
 	
 		
 		mFieldView = (FieldView)findViewById(R.id.hhfootballview);		
