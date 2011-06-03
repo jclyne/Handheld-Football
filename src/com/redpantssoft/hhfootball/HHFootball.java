@@ -118,6 +118,7 @@ public class HHFootball extends Activity {
      *
      * @param view    Reference to the "New Game" button
      */
+    @SuppressWarnings({"UnusedDeclaration", "UnusedParameters"})
     public void onNewGame(View view) {
         Intent intent = new Intent();
         intent.setClass(this, Game.class);
@@ -131,6 +132,7 @@ public class HHFootball extends Activity {
      *
      * @param view     Reference to the "Settings" button
      */
+    @SuppressWarnings({"UnusedDeclaration", "UnusedParameters"})
     public void onSettings(View view) {
         Intent intent = new Intent();
         intent.setClass(this, Settings.class);
@@ -144,6 +146,7 @@ public class HHFootball extends Activity {
      *
      * @param view     Reference to the "About" button
      */
+    @SuppressWarnings({"UnusedDeclaration", "UnusedParameters"})
     public void onAbout(View view) {
         showDialog(ABOUT_DIALOG);
     }
@@ -155,6 +158,7 @@ public class HHFootball extends Activity {
      *
      * @param view     Reference to the "Exit" button
      */
+    @SuppressWarnings({"UnusedDeclaration", "UnusedParameters"})
     public void onExit(View view) {
         finish();
     }

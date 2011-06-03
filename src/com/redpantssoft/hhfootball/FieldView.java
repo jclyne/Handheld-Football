@@ -90,7 +90,7 @@ public class FieldView extends View
 		/**
 		 * Generates a bitmap to fit into the field of play grid from the specified drawable. This
 		 * should be called when a new tile image is set and when the view gets resized
-		 * @param tile Drawable to draw into the bitmap
+		 * @param tileSize Drawable to draw into the bitmap
 		 * @return generated bitmap
 		 */
 		public void scaleTileBitmap(int tileSize, int fieldLineWidth)

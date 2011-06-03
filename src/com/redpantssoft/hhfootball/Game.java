@@ -361,7 +361,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mKickMeter= (KickMeter)findViewById(R.id.kick_meter);
 		mInfoView = new TextViewAnimator((TextView)findViewById(R.id.info_view),
 											AnimationUtils.loadAnimation(this, R.anim.scroll_in),
-											AnimationUtils.loadAnimation(this, R.anim.scroll_out));
+											AnimationUtils.loadAnimation(this, R.anim.scroll_out), mBackgroundColor);
 		
 		// Set up the button handlers
 		findViewById(R.id.kick_button).setOnTouchListener( new OnTouchListener (){
