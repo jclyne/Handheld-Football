@@ -1,7 +1,5 @@
 package com.redpantssoft.hhfootball;
 
-import java.util.Random;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -24,13 +22,10 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.animation.AnimationUtils;
 import android.widget.TextView;
-
-import com.redpantssoft.Coordinate;
-import com.redpantssoft.Percentage;
-import com.redpantssoft.SoundManager;
-import com.redpantssoft.TextViewAnimator;
-import com.redpantssoft.Timer;
+import com.redpantssoft.*;
 import com.redpantssoft.hhfootball.GameClock.Period;
+
+import java.util.Random;
 
 
 /**
@@ -59,7 +54,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	private static final int MENU_SETTINGS=1;
 	private static final int MENU_QUIT=2;
 	
-	private SoundManager mSoundManager;
+	private SoundFxManager mSoundFxManager;
 	private static final int AUDIO_QUARTERBACK=1;
 	private static final int AUDIO_TACKLE=2;
 	private static final int AUDIO_WHISTLE=3;
@@ -425,11 +420,11 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		});
 		
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
-		mSoundManager=new SoundManager(this);
+		mSoundFxManager =new SoundFxManager(this);
 		
 		// Get the current settings values
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-		mSoundManager.setMute(settings.getBoolean("sound", true) == false);
+		mSoundFxManager.setMute(settings.getBoolean("sound", true) == false);
 		mVibrate=settings.getBoolean("vibrate", mVibrate);
 		mPeriodLengthMins=Integer.parseInt(settings.getString("period_length", String.valueOf(mPeriodLengthMins)));
 		mDifficulty = Difficulty.valueOf(settings.getString("difficulty", mDifficulty.name()));
@@ -443,7 +438,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	 * @see android.app.Activity#onPostCreate(android.os.Bundle)
 	 */
 	@Override
-	protected void onPostCreate(Bundle savedInstanceState) 
+	protected void onPostCreate(Bundle savedInstanceState)
 	{
 		super.onPostCreate(savedInstanceState);
 		Resources r = getBaseContext().getResources();
@@ -460,8 +455,8 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 			Bundle map = savedInstanceState.getBundle(TAG);
 			if (map != null)
 			{
-				restoreState(map);
-			}
+                restoreState(map);
+            }
 		}
 		else
 		{
@@ -474,7 +469,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	protected void onDestroy() 
 	{
 		mWakeLock.release();
-		mSoundManager.release();
+		mSoundFxManager.release();
 		super.onDestroy();
 	}
 
@@ -486,7 +481,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mGameClock.stop();
 		mAiUpdater.stop();
 		mGameUpdater.stop();
-		mSoundManager.pause();
+		mSoundFxManager.pause();
 	}
 
 	
@@ -517,7 +512,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				break;	
 		}
 		
-		mSoundManager.resume();
+		mSoundFxManager.resume();
 		updateDriveStatus();
 		updateScoreBoard();
 		mGameUpdater.start();
@@ -553,7 +548,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	{
 		if (key.equals("sound"))
 		{
-			mSoundManager.setMute(settings.getBoolean("sound", true) == false);
+			mSoundFxManager.setMute(settings.getBoolean("sound", true) == false);
 		}
 		else if (key.equals("vibrate"))
 		{
@@ -581,8 +576,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 	 * @param savedState
 	 *            a Bundle containing the game state
 	 */
-	public void restoreState(Bundle savedState)
-	{
+	public void restoreState(Bundle savedState) {
 		mState=State.values()[savedState.getInt("mState")];
 		mGameState=GameState.values()[savedState.getInt("mGameState")];
 		mHomeScore=savedState.getInt("mHomeScore");
@@ -599,41 +593,44 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mBallPos=new Coordinate(savedState.getBundle("mBallPos"));
 		mOffense=new Offense(savedState.getBundle("mOffense"));
 		mDefense=new Defense(savedState.getBundle("mDefense"));
-		switch (mState)
-		{
-			case GAME_OVER:
-				mSoundManager.release();
-				break;
-			case PLAY_DEAD:
-				initAudio();
-				mSoundManager.playSfx(AUDIO_CROWD,true);
-				initPreSnap();
-				break;
-			default:
-				initAudio();
-				mSoundManager.playSfx(AUDIO_CROWD,true);
-		}
+        switch (mState)
+        {
+            case GAME_OVER:
+                mSoundFxManager.release();
+                break;
+            case PLAY_DEAD:
+                initAudio();
+                mSoundFxManager.playSfx(AUDIO_CROWD,true);
+                initPreSnap();
+                break;
+            default:
+                initAudio();
+                mSoundFxManager.playSfx(AUDIO_CROWD,true);
+        }
+
 	}
 	
 	private void initAudio()
 	{
-		mSoundManager.addSfx(AUDIO_CROWD, R.raw.crowd);
-		mSoundManager.addSfx(AUDIO_CROWD_BOO, R.raw.crowd_boo);
-		mSoundManager.addSfx(AUDIO_CROWD_CHEER, R.raw.crowd_cheer);
-		mSoundManager.addSfx(AUDIO_QUARTERBACK, R.raw.quarterback);
-		mSoundManager.addSfx(AUDIO_TACKLE, R.raw.tackle);
-		mSoundManager.addSfx(AUDIO_WHISTLE, R.raw.whistle);
-		mSoundManager.addSfx(AUDIO_KICK, R.raw.kick);
-		mSoundManager.addSfx(AUDIO_CATCH, R.raw.ball_catch);
-		mSoundManager.addSfx(AUDIO_TOUCHDOWN,R.raw.touchdown);
-		mSoundManager.addSfx(AUDIO_FIRST_DOWN,R.raw.firstdown);
-		mSoundManager.addSfx(AUDIO_BUZZER,R.raw.buzzer);
-		mSoundManager.setSfxVolume(AUDIO_CROWD, 0.1f);
-	}
+		mSoundFxManager.addSfx(AUDIO_CROWD, R.raw.crowd);
+		mSoundFxManager.addSfx(AUDIO_CROWD_BOO, R.raw.crowd_boo);
+		mSoundFxManager.addSfx(AUDIO_CROWD_CHEER, R.raw.crowd_cheer);
+		mSoundFxManager.addSfx(AUDIO_QUARTERBACK, R.raw.quarterback);
+		mSoundFxManager.addSfx(AUDIO_TACKLE, R.raw.tackle);
+		mSoundFxManager.addSfx(AUDIO_WHISTLE, R.raw.whistle);
+		mSoundFxManager.addSfx(AUDIO_KICK, R.raw.kick);
+		mSoundFxManager.addSfx(AUDIO_CATCH, R.raw.ball_catch);
+		mSoundFxManager.addSfx(AUDIO_TOUCHDOWN,R.raw.touchdown);
+		mSoundFxManager.addSfx(AUDIO_FIRST_DOWN,R.raw.firstdown);
+		mSoundFxManager.addSfx(AUDIO_BUZZER,R.raw.buzzer);
+        mSoundFxManager.setSfxVolume(AUDIO_CROWD, 0.1f);
+
+    }
 	
 	/**
 	 * Returns the number of tiles long (between the end zones) the playing field is
-	 */
+     * @return
+     */
 	public int getFieldLength()
 	{
 		return mFieldView.getFieldLength();
@@ -652,7 +649,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mOffense = new Offense(Team.SIDE_HOME,Team.ORIENTATION_LEFT);
 		mDefense = new Defense(Team.SIDE_VISITOR,Team.ORIENTATION_RIGHT);
 		mBallPos = new Coordinate(mOffense.quarterback().pos());
-		mGameClock = new GameClock(mPeriodLengthMins,this);
+		mGameClock = new GameClock(mPeriodLengthMins*60,this);
 		mHomeScore=0;
 		mVisitorScore=0;
 		mInfoView.clear();
@@ -661,7 +658,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		updateDriveStatus();
 		
 		initAudio();	
-		mSoundManager.playSfx(AUDIO_CROWD,true);
+		mSoundFxManager.playSfx(AUDIO_CROWD,true);
 		mGameUpdater.start();
 		initPreSnap();
 	}
@@ -683,7 +680,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				arrangePreSnapFormation(mDefense);
 				mInfoView.setText(getString(R.string.info_kickoff),mInfoDuration);
 				updateDriveStatus();
-				mKickMeter.setMinMax(20,75);
+				mKickMeter.setMinMaxPower(20, 75);
 				mKickMeter.enable();
 				return;
 				
@@ -694,7 +691,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				arrangePreSnapFormation(mDefense);
 				mInfoView.setText(getString(R.string.info_freekick),mInfoDuration);
 				updateDriveStatus();
-				mKickMeter.setMinMax(20,75);
+				mKickMeter.setMinMaxPower(20, 75);
 				mKickMeter.enable();
 				return;
 				
@@ -713,7 +710,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		mState=State.PRE_SNAP;
 		arrangePreSnapFormation(mOffense);
 		arrangePreSnapFormation(mDefense);
-		mSoundManager.playSfx(AUDIO_QUARTERBACK,true);
+		mSoundFxManager.playSfx(AUDIO_QUARTERBACK,true);
 		updateScoreBoard();
 		updateDriveStatus();
 	}
@@ -821,7 +818,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 					mLineOfScrimmage=mFieldPos;
 					mFirstDownPos=swapFieldPosOrientation(mFirstDownPos);
 					swapOrientation();
-					mGameClock.set_period();
+					mGameClock.setPeriod();
 					mInfoView.setText(getString(R.string.info_change_sides),mInfoDuration);
 					break;
 				case HALFTIME:	
@@ -830,7 +827,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 					mDefense.setSide(Team.SIDE_HOME);
 					mDefense.setOrientation(Team.ORIENTATION_RIGHT);
 					mGameState=GameState.KICKOFF;
-					mGameClock.set_period();
+					mGameClock.setPeriod();
 					break;
 				case GAME_OVER:
 					return;
@@ -865,7 +862,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		switch (mGameState)
 		{
 			case KICK_RETURN:
-				mSoundManager.playSfx(AUDIO_TACKLE,false);
+				mSoundFxManager.playSfx(AUDIO_TACKLE,false);
 				if (mVibrate)
 					mVibrator.vibrate(VIBRATE_DURATION);
 				handleFirstDown();
@@ -877,7 +874,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				break;
 				
 			case TOUCHDOWN:
-				mSoundManager.playSfx(AUDIO_TOUCHDOWN,false);
+				mSoundFxManager.playSfx(AUDIO_TOUCHDOWN,false);
 				mInfoView.setText(getString(R.string.info_touchdown),mInfoDuration);
 				mGameState=GameState.KICKOFF;
 				break;
@@ -907,7 +904,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 			case DRIVE_IN_PROGRESS:
 				if (mGameState==GameState.DRIVE_IN_PROGRESS)
 				{
-					mSoundManager.playSfx(AUDIO_TACKLE,false);	
+					mSoundFxManager.playSfx(AUDIO_TACKLE,false);
 					if (mVibrate)
 						mVibrator.vibrate(VIBRATE_DURATION);
 				}
@@ -923,7 +920,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				else if (checkFirstDown())
 				{
 					handleFirstDown();
-					mSoundManager.playSfx(AUDIO_FIRST_DOWN,false);
+					mSoundFxManager.playSfx(AUDIO_FIRST_DOWN,false);
 					mInfoView.setText(getString(R.string.info_first_down),mInfoDuration);
 				}
 				else if (mSeriesDown == mDownsPerSeries)
@@ -954,7 +951,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		
 		try{Thread.sleep(200);}
 			catch (InterruptedException e){}
-		mSoundManager.playSfx(AUDIO_WHISTLE,false); 
+		mSoundFxManager.playSfx(AUDIO_WHISTLE,false);
 				
 		switch (mGameClock.period())
 		{
@@ -973,7 +970,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 			case GAME_OVER:
 				mState = State.GAME_OVER;
 				mInfoView.setText(getString(R.string.info_game_over));
-				mSoundManager.release();
+				mSoundFxManager.release();
 				mGameUpdater.stop();
 				break;
 				
@@ -981,11 +978,11 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 				mHuddleTimer.start();
 		}
 	}
-	
+
 
 	private void handleKickReception()
 	{
-		mSoundManager.playSfx(AUDIO_CATCH,false);
+		mSoundFxManager.playSfx(AUDIO_CATCH,false);
 		swapSides();
 		swapOrientation();
 		mGameState=GameState.KICK_RETURN;
@@ -1067,12 +1064,12 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		if (mOffense.side() == Team.SIDE_HOME)
 		{
 			mHomeScore+=7;
-			mSoundManager.playSfx(AUDIO_CROWD_CHEER, false);
+			mSoundFxManager.playSfx(AUDIO_CROWD_CHEER, false);
 		}
 		else
 		{
 			mVisitorScore+=7;
-			mSoundManager.playSfx(AUDIO_CROWD_BOO, false);
+			mSoundFxManager.playSfx(AUDIO_CROWD_BOO, false);
 		}
 		
 		mGameState=GameState.TOUCHDOWN;
@@ -1085,12 +1082,12 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		if (mDefense.side() == Team.SIDE_HOME)
 		{
 			mHomeScore+=2;
-			mSoundManager.playSfx(AUDIO_CROWD_CHEER, false);
+			mSoundFxManager.playSfx(AUDIO_CROWD_CHEER, false);
 		}
 		else
 		{
 			mVisitorScore+=2;
-			mSoundManager.playSfx(AUDIO_CROWD_BOO, false);
+			mSoundFxManager.playSfx(AUDIO_CROWD_BOO, false);
 		}
 		
 		mGameState=GameState.SAFETY;
@@ -1107,12 +1104,12 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 			if (mOffense.side() == Team.SIDE_HOME)
 			{
 				mHomeScore+=3;
-				mSoundManager.playSfx(AUDIO_CROWD_CHEER, false);
+				mSoundFxManager.playSfx(AUDIO_CROWD_CHEER, false);
 			}
 			else
 			{
 				mVisitorScore+=3;
-				mSoundManager.playSfx(AUDIO_CROWD_BOO, false);
+				mSoundFxManager.playSfx(AUDIO_CROWD_BOO, false);
 			}
 			
 			mGameState=GameState.FIELD_GOAL_MAKE;
@@ -1133,7 +1130,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		if (mKickMeter.isEnabled())
 			return;
 		
-		mSoundManager.stopSfx(AUDIO_QUARTERBACK);
+		mSoundFxManager.stopSfx(AUDIO_QUARTERBACK);
 		mInfoView.clearText();
 		mState = State.PLAY_LIVE;
 		mGameClock.start();
@@ -1423,7 +1420,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 			mKickPower=mKickMeter.getPowerValue();
 			Log.i(TAG,String.format("KickMeter kick power = %d",mKickPower));
 			mBallPos=new Coordinate(mOffense.quarterback().pos());
-			mSoundManager.playSfx(AUDIO_KICK,false);
+			mSoundFxManager.playSfx(AUDIO_KICK,false);
 			mInfoView.clearText();
 			mState = State.KICK;
 		}
@@ -1432,9 +1429,9 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 			switch (mState)
 			{
 				case PRE_SNAP:
-					mSoundManager.stopSfx(AUDIO_QUARTERBACK);
+					mSoundFxManager.stopSfx(AUDIO_QUARTERBACK);
 					mInfoView.clearText();
-					mKickMeter.setMinMax(5,50);
+					mKickMeter.setMinMaxPower(5, 50);
 					mGameState = GameState.FIELD_GOAL_ATTEMPT;
 					mKickMeter.enable();
 					mAiUpdater.stop();
@@ -1446,7 +1443,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 					if (ballAcrossLineOfScrimmage() == false)
 					{
 						mInfoView.clearText();
-						mKickMeter.setMinMax(10,60);
+						mKickMeter.setMinMaxPower(10, 60);
 						mKickMeter.enable();
 						mGameState = GameState.PUNT;
 						mAiUpdater.stop();
@@ -1471,7 +1468,7 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 		Player quarterback = mOffense.quarterback();
 		Player receiver = mOffense.receiver();
 		
-		mSoundManager.playSfx(AUDIO_CATCH,false);
+		mSoundFxManager.playSfx(AUDIO_CATCH,false);
 		mFieldPos+=(receiver.pos().x - quarterback.pos().x);
 		quarterback.set(receiver.pos().x,receiver.pos().y);
 		receiver.set(-1,-1);
@@ -1792,21 +1789,21 @@ public class Game extends Activity implements SharedPreferences.OnSharedPreferen
 			
 		updateField(flash);
 	}
-	public void updateClockDisplay(float clock) 
+
+    @Override
+	public void updateClockDisplay(float clock,Period period)
 	{
 		int mins=(int)Math.floor(clock/60);
 		float secs=clock- (mins*60);
 		mClockView.setText(String.format("%02d:%04.1f",mins,secs));
+        mPeriodView.setText(String.format("%d",period.toInt()));
 	}
 
-	public void updatePeriodDisplay(Period period) 
-	{
-		mPeriodView.setText(String.format("%d",period.toInt()));
-	}
 
+    @Override
 	public void handleClockExpired() 
 	{
-		mSoundManager.playSfx(AUDIO_BUZZER,false);
+		mSoundFxManager.playSfx(AUDIO_BUZZER,false);
 	}
 	
 	private void setPlayerTile(Player player, int bitmapIdx,boolean flash)
